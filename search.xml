@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>hexo1</title>
+      <link href="/2023/11/18/hexo1/"/>
+      <url>/2023/11/18/hexo1/</url>
+      
+        <content type="html"><![CDATA[<h2 id="Hexo-Butterfly中鼠标放到头像上头像会转动，如何取消转动"><a href="#Hexo-Butterfly中鼠标放到头像上头像会转动，如何取消转动" class="headerlink" title="Hexo+Butterfly中鼠标放到头像上头像会转动，如何取消转动"></a>Hexo+Butterfly中鼠标放到头像上头像会转动，如何取消转动</h2><p>这个在_config中改不了，经过查阅资料，发现在 hexo-theme-butterfly&#x2F;source&#x2F;css&#x2F;_layout&#x2F;aside.styl中进行更改,大约在324行</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">img</span><br><span class="line">  width: 100%</span><br><span class="line">  height: 100%</span><br><span class="line">  transition: filter 375ms ease-in .2s, transform .3s</span><br><span class="line">  object-fit: cover</span><br><span class="line"></span><br><span class="line">  &amp;:hover</span><br><span class="line">    transform: rotate(360deg)</span><br></pre></td></tr></table></figure><p>将后两行删掉</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">img</span><br><span class="line">  width: 100%</span><br><span class="line">  height: 100%</span><br><span class="line">  transition: filter 375ms ease-in .2s, transform .3s</span><br><span class="line">  object-fit: cover</span><br></pre></td></tr></table></figure><p>这样头像就不会转动了</p><p>参考链接: <a href="https://github.com/jerryc127/hexo-theme-butterfly/discussions/878">https://github.com/jerryc127/hexo-theme-butterfly/discussions/878</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Hexo </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 更改配置 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>CSP算法模板</title>
       <link href="/2023/11/17/CSP2/"/>
       <url>/2023/11/17/CSP2/</url>
