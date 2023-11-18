@@ -2942,13 +2942,6 @@ h1.page-title + .tag-cloud-list {
   transition: filter 375ms ease-in 0.2s, transform 0.3s;
   object-fit: cover;
 }
-.avatar-img img:hover {
-  -webkit-transform: rotate(360deg);
-  -moz-transform: rotate(360deg);
-  -o-transform: rotate(360deg);
-  -ms-transform: rotate(360deg);
-  transform: rotate(360deg);
-}
 .site-data {
   display: table;
   width: 100%;
