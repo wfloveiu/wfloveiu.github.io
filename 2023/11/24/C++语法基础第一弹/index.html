@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>C++语法基础第一弹 | 欢迎来到吴方的个人博客</title><meta name="author" content="吴方"><meta name="copyright" content="吴方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="C++语法基础第一弹类的设计第一步提供类声明，包括数据成员和函数成员。通常数据成员被放在私有部分中，成员函数被放在公有部分，写在ClassName..h文件中，格式如下 12345678class ClassName&amp;#123;	private:		int num;		...	public:		int function()&amp;#125;  第二步是实现类的成员函数，可以在类的声明中直接写函数的实现，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++语法基础第一弹">
+<meta property="og:url" content="http://example.com/2023/11/24/C++%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80%E7%AC%AC%E4%B8%80%E5%BC%B9/index.html">
+<meta property="og:site_name" content="欢迎来到吴方的个人博客">
+<meta property="og:description" content="C++语法基础第一弹类的设计第一步提供类声明，包括数据成员和函数成员。通常数据成员被放在私有部分中，成员函数被放在公有部分，写在ClassName..h文件中，格式如下 12345678class ClassName&amp;#123;	private:		int num;		...	public:		int function()&amp;#125;  第二步是实现类的成员函数，可以在类的声明中直接写函数的实现，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avatar.jpg">
+<meta property="article:published_time" content="2023-11-24T14:50:16.000Z">
+<meta property="article:modified_time" content="2023-11-24T14:51:32.000Z">
+<meta property="article:author" content="吴方">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avatar.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2023/11/24/C++%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80%E7%AC%AC%E4%B8%80%E5%BC%B9/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'C++语法基础第一弹',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-11-24 22:51:32'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">12</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 个人介绍</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="欢迎来到吴方的个人博客"><span class="site-name">欢迎来到吴方的个人博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 个人介绍</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">C++语法基础第一弹</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-11-24T14:50:16.000Z" title="发表于 2023-11-24 22:50:16">2023-11-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-11-24T14:51:32.000Z" title="更新于 2023-11-24 22:51:32">2023-11-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C-%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80/">C++语法基础</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="C++语法基础第一弹"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="C-语法基础第一弹"><a href="#C-语法基础第一弹" class="headerlink" title="C++语法基础第一弹"></a>C++语法基础第一弹</h1><h2 id="类的设计"><a href="#类的设计" class="headerlink" title="类的设计"></a>类的设计</h2><p>第一步提供<strong>类声明</strong>，包括<strong>数据成员</strong>和<strong>函数成员</strong>。通常<strong>数据成员被放在私有部分</strong>中，<strong>成员函数被放在公有部分</strong>，写在<code>ClassName..h</code>文件中，格式如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ClassName</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">private</span>:</span><br><span class="line">		<span class="type">int</span> num;</span><br><span class="line">		...</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="function"><span class="type">int</span> <span class="title">function</span><span class="params">()</span></span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>第二步是<strong>实现</strong>类的成员函数，可以在类的声明中直接写函数的实现，但是通常的做法是<strong>单独提供函数的实现</strong>。在这种情况下，需要使用<strong>作用域解析运算符</strong><code>::</code>指出成员函数属于哪个类,写在<code>ClassName.cpp</code>文件中</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;ClassName.h&quot;</span></span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ClassName::sum</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	........</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">void</span> ClassName:<span class="built_in">show</span>()</span><br><span class="line">&#123;</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>知识点：</strong></p>
+<ul>
+<li>在实现类的方法时，需要用到作用域解析运算符<code>::</code></li>
+<li>类方法可以访问类的私有成员，无论是私有变量还是私有函数</li>
+<li>函数声明&#x3D;函数原型，函数定义&#x3D;函数实现</li>
+<li>同一个类的所有对象都有自己的存储空间，用于存储其内部变量和类成员，但是同一个类的所有对象共享一组类方法，每种方法只有一个副本</li>
+</ul>
+<h2 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h2><p>拿Stock类举例，要写它的构造函数，则<strong>函数声明</strong>如下,写在类声明的public中</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Stock</span>(<span class="type">const</span> string &amp; co, <span class="type">long</span> n, <span class="type">double</span> pr)  <span class="comment">//构造函数的函数名与类名一致</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>函数实现</strong>如下，写在<code>Stock.cpp</code>中</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Stock::<span class="built_in">Stock</span>(<span class="type">const</span> string &amp; co, <span class="type">long</span> n, <span class="type">double</span> pr)</span><br><span class="line">&#123;</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：<strong>构造函数的参数名字不能与类成员名一样</strong></p>
+<p>构造函数如何使用呢，如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 显式调用</span></span><br><span class="line">Stock food = <span class="built_in">Stock</span>(<span class="string">&quot;sss&quot;</span>,<span class="number">12</span>,<span class="number">2.12</span>);</span><br><span class="line"><span class="comment">// 隐式调用</span></span><br><span class="line"><span class="function">Stock <span class="title">food</span><span class="params">(<span class="string">&quot;sss&quot;</span>,<span class="number">12</span>,<span class="number">2.12</span>)</span></span>;</span><br><span class="line"><span class="comment">// C++11后支持初始化列表</span></span><br><span class="line">Stock food=&#123;<span class="string">&quot;sss&quot;</span>,<span class="number">12</span>,<span class="number">2.12</span>&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>默认构造函数是在未提供初始值时，用来创建对象的构造函数。当程序员没有给一个类写构造函数时，由编译器给它提供默认构造函数，而当程序员给类定义了构造函数时，就必须为它提供默认构造函数。默认构造函数有两种方式，<strong>建议使用第二种</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 给已有的构造函数的所有参数提供默认值</span></span><br><span class="line"><span class="built_in">Stock</span>(<span class="type">const</span> string &amp; co=<span class="string">&quot;wqwq&quot;</span>, <span class="type">long</span> n=<span class="number">0</span>, <span class="type">double</span> pr=<span class="number">0.0</span>)</span><br><span class="line"><span class="comment">// 利用运算符重载，另外定义一个没有参数的构造函数，然后在这个函数的函数体内进行类成员变量的初始化,叫做隐式初始化</span></span><br><span class="line"><span class="built_in">Stock</span>()</span><br><span class="line">&#123;</span><br><span class="line">	comany = <span class="string">&quot;wqwq&quot;</span>;</span><br><span class="line">	<span class="type">long</span> n = <span class="number">0</span>;</span><br><span class="line">	<span class="type">double</span> pr = <span class="number">0.0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用默认构造函数，</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Stock food; <span class="comment">//调用默认构造函数</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="析构函数"><a href="#析构函数" class="headerlink" title="析构函数"></a>析构函数</h2><p>对象过期时，会调用析构函数来进行清理工作，程序员不写的话，编译器会自己生成一个。</p>
+<p>声明如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">~<span class="built_in">Stock</span>()</span><br></pre></td></tr></table></figure>
+
+<p>实现如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Stock::~<span class="built_in">Stock</span>()</span><br><span class="line">&#123;</span><br><span class="line">	.....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="this指针"><a href="#this指针" class="headerlink" title="this指针"></a>this指针</h2><p>现在有一个场景，<strong>想要比较两个Stock对象的total_val值。</strong>(类似于&gt;运算符的重载)</p>
+<p>声明：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">const</span> Stock &amp; <span class="title">topval</span><span class="params">(<span class="type">const</span> Stock &amp; s)</span> <span class="type">const</span></span>;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">在C++中对于自定义的类型（这里是Stock类）的形参，要使用引用，从而避免大量的拷贝操作，因此参数是Stock &amp; s，而防止修改s对应的对象，使用const</span></span><br><span class="line"><span class="comment">括号后的const的意思是：这个函数不能通过this修改对象的值，</span></span><br><span class="line"><span class="comment">函数名是topval</span></span><br><span class="line"><span class="comment">由于该函数需要返回两个const返回类型是const Stock &amp; </span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<p>实现</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// this是指针，为调用它的对象的地址</span></span><br><span class="line"><span class="function"><span class="type">const</span> Stock &amp; <span class="title">topval</span><span class="params">(<span class="type">const</span> Stock &amp; s)</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span>(s.total_val&gt;total_val)</span><br><span class="line">		<span class="keyword">return</span> s;</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		<span class="keyword">return</span> *<span class="keyword">this</span>;   <span class="comment">//返回的是调用对象本身</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>在这个函数的实现部分，我刚开始有个疑惑的点：私有变量<code>total_val</code>不是只能通过成员函数来访问吗，为什么可以直接<code>s.total_val</code>呢？</p>
+<p>我首先编写代码在main中使用<code>s.total_val</code>，编译的时候报错，并且报错提示给的也是：<code>total_val是私有变量</code>，那说明私有变量确实是只能通过成员函数来访问。</p>
+<p>但是这也不在s的类内部啊，怎么s能访问<code>total_val</code>呢？</p>
+<p>猜测是因为类中的成员函数在内存中只有一份副本</p>
+</blockquote>
+<h2 id="引用"><a href="#引用" class="headerlink" title="引用&amp;"></a>引用&amp;</h2><p>引用是给对象起的别名，引用本身不是一个对象，不能定义引用的引用</p>
+<p>引用的类型和与之绑定的对象严格匹配</p>
+<h2 id="const限定符"><a href="#const限定符" class="headerlink" title="const限定符"></a>const限定符</h2><ul>
+<li><p>默认情况下，const对象只在文件内有效</p>
+</li>
+<li><p>const修饰的常量不能被修改</p>
+</li>
+<li><p>const常量在创建时，必须初始化</p>
+</li>
+</ul>
+<p><strong>指针与const</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">char</span> * a; <span class="comment">//指向const对象的指针，即指向常量的指针</span></span><br><span class="line"><span class="type">char</span> <span class="type">const</span> * a;</span><br><span class="line"><span class="type">char</span> * <span class="type">const</span> a; <span class="comment">//指向char类型的const指针，即常指针</span></span><br><span class="line"><span class="type">const</span> <span class="type">char</span> * <span class="type">const</span> a; <span class="comment">//指向const对象的const指针</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><em>const</em>位于<code>*</code>的左侧，则const就是用来修饰指针所指向的变量，即指针指向为常量；如果const位于<code>*</code>的右侧，<em>const</em>就是修饰指针本身，即指针本身是常量。</p>
+</blockquote>
+<p><strong>函数中使用const</strong></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">吴方</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/11/24/C++%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80%E7%AC%AC%E4%B8%80%E5%BC%B9/">http://example.com/2023/11/24/C++%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80%E7%AC%AC%E4%B8%80%E5%BC%B9/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">欢迎来到吴方的个人博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/11/26/Tinyhttpd%E7%AC%AC%E4%BA%8C%E5%BC%B9/" title="Tinyhttpd第二弹"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Tinyhttpd第二弹</div></div></a></div><div class="next-post pull-right"><a href="/2023/11/23/Tinyhttpd%E7%AC%AC%E4%B8%80%E5%BC%B9/" title="Tinyhttpd第一弹"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Tinyhttpd第一弹</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">吴方</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">12</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/wfloveiu/-----"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/wfloveiu/" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:wufangiu666666@163.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://www.zhihu.com/people/wfloveiu" target="_blank" title="zhihu"><i class="fa-brands fa-zhihu" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C-%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80%E7%AC%AC%E4%B8%80%E5%BC%B9"><span class="toc-number">1.</span> <span class="toc-text">C++语法基础第一弹</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B1%BB%E7%9A%84%E8%AE%BE%E8%AE%A1"><span class="toc-number">1.1.</span> <span class="toc-text">类的设计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="toc-number">1.2.</span> <span class="toc-text">构造函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%90%E6%9E%84%E5%87%BD%E6%95%B0"><span class="toc-number">1.3.</span> <span class="toc-text">析构函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#this%E6%8C%87%E9%92%88"><span class="toc-number">1.4.</span> <span class="toc-text">this指针</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%95%E7%94%A8"><span class="toc-number">1.5.</span> <span class="toc-text">引用&amp;</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#const%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">1.6.</span> <span class="toc-text">const限定符</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/14/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/" title="IO多路复用">IO多路复用</a><time datetime="2023-12-14T13:20:17.000Z" title="发表于 2023-12-14 21:20:17">2023-12-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/06/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B3/" title="网络编程-Linux系统编程3">网络编程-Linux系统编程3</a><time datetime="2023-12-06T06:12:45.000Z" title="发表于 2023-12-06 14:12:45">2023-12-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/03/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B2/" title="网络编程-Linux系统编程2">网络编程-Linux系统编程2</a><time datetime="2023-12-03T04:38:50.000Z" title="发表于 2023-12-03 12:38:50">2023-12-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/28/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B1/" title="网络编程-Linux系统编程1">网络编程-Linux系统编程1</a><time datetime="2023-11-28T14:07:10.000Z" title="发表于 2023-11-28 22:07:10">2023-11-28</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/26/Tinyhttpd%E7%AC%AC%E4%BA%8C%E5%BC%B9/" title="Tinyhttpd第二弹">Tinyhttpd第二弹</a><time datetime="2023-11-26T08:57:21.000Z" title="发表于 2023-11-26 16:57:21">2023-11-26</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2023 By 吴方</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">你好,欢迎来到我的博客</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

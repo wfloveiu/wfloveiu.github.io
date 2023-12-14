@@ -1,0 +1,307 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>网络编程-Linux系统编程1 | 欢迎来到吴方的个人博客</title><meta name="author" content="吴方"><meta name="copyright" content="吴方"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Linux系统编程1快捷键ctrl+a:光标移到命令行最前面 ctrl+e:光标移到命令行最后面 ctrl+u:删除整行 gcc编译的四个阶段 预处理：gcc -E helloworld.c -o helloworld.i  编译：gcc -S helloworld.i -o helloworld.s           编译阶段出错，会给出行号  汇编：gcc -c helloworld.s -">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络编程-Linux系统编程1">
+<meta property="og:url" content="http://example.com/2023/11/28/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B1/index.html">
+<meta property="og:site_name" content="欢迎来到吴方的个人博客">
+<meta property="og:description" content="Linux系统编程1快捷键ctrl+a:光标移到命令行最前面 ctrl+e:光标移到命令行最后面 ctrl+u:删除整行 gcc编译的四个阶段 预处理：gcc -E helloworld.c -o helloworld.i  编译：gcc -S helloworld.i -o helloworld.s           编译阶段出错，会给出行号  汇编：gcc -c helloworld.s -">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avatar.jpg">
+<meta property="article:published_time" content="2023-11-28T14:07:10.000Z">
+<meta property="article:modified_time" content="2023-12-03T04:39:36.000Z">
+<meta property="article:author" content="吴方">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avatar.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2023/11/28/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B1/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '网络编程-Linux系统编程1',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-12-03 12:39:36'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">12</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 个人介绍</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="欢迎来到吴方的个人博客"><span class="site-name">欢迎来到吴方的个人博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 个人介绍</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">网络编程-Linux系统编程1</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-11-28T14:07:10.000Z" title="发表于 2023-11-28 22:07:10">2023-11-28</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-12-03T04:39:36.000Z" title="更新于 2023-12-03 12:39:36">2023-12-03</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="网络编程-Linux系统编程1"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Linux系统编程1"><a href="#Linux系统编程1" class="headerlink" title="Linux系统编程1"></a>Linux系统编程1</h1><h2 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h2><p><code>ctrl+a</code>:光标移到命令行最前面</p>
+<p><code>ctrl+e</code>:光标移到命令行最后面</p>
+<p><code>ctrl+u</code>:删除整行</p>
+<h2 id="gcc编译的四个阶段"><a href="#gcc编译的四个阶段" class="headerlink" title="gcc编译的四个阶段"></a>gcc编译的四个阶段</h2><ul>
+<li><p>预处理：<code>gcc -E helloworld.c -o helloworld.i</code></p>
+</li>
+<li><p>编译：<code>gcc -S helloworld.i -o helloworld.s</code>           <strong>编译阶段出错，会给出行号</strong></p>
+</li>
+<li><p>汇编：<code>gcc -c helloworld.s -o helloworld.o</code></p>
+</li>
+<li><p>链接：<code>gcc helloworld.o -o helloworld</code>                    <strong>链接阶段出错，会有<code>collect: error: ld</code></strong></p>
+</li>
+</ul>
+<h2 id="gcc编译常用命令"><a href="#gcc编译常用命令" class="headerlink" title="gcc编译常用命令"></a>gcc编译常用命令</h2><ul>
+<li><code>-o</code>：指定生成的文件</li>
+<li><code>-I </code>：指定头文件的路径</li>
+<li><code>-g</code>：编译时添加调试语句（要使用gdb调试时必须加这个参数）</li>
+<li><code>-Wall</code>：显示所有警告信息</li>
+<li><code>-D</code>：向当前程序中注册一个宏，如<code>gcc hello.c -D HELLO</code>就是注册了一个HELLO的宏用作开关来输出调试信息</li>
+</ul>
+<h2 id="静态库和动态库"><a href="#静态库和动态库" class="headerlink" title="静态库和动态库"></a>静态库和动态库</h2><p>静态库会在链接的时候直接把库文件复制到程序中，运行的时候不再依赖库文件。以<code>.a</code>为后缀</p>
+<p>动态库是在运行时动态加载。以<code>.so</code>为后缀</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;math.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc,<span class="type">char</span> *argv[])</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hello 编程珠玑\n&quot;</span>);</span><br><span class="line">    <span class="type">int</span> b = <span class="number">2</span>;</span><br><span class="line">    <span class="type">double</span> a = <span class="built_in">exp</span>(b);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%lf\n&quot;</span>,a);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>对于这个函数，使用了math.h中的exp函数</p>
+<p>静态链接</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -<span class="type">static</span> main.c -o main -lm</span><br></pre></td></tr></table></figure>
+
+<p>动态链接</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc main.c -o main -lm</span><br></pre></td></tr></table></figure>
+
+<p>使用了<code>-l</code>参数，后边的<code>m</code>是<code>math.h</code>的基本名称</p>
+<p>可以使用<code>ldd main</code>查看动态链接文件的都链接了哪些库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">wufang@wufang:~/C++_base_learning$ ldd test1</span><br><span class="line">	linux-vdso.so.1 (0x00007ffca1fc5000)</span><br><span class="line">	libm.so.6 =&gt; /lib/x86_64-linux-gnu/libm.so.6 (0x00007f2cb480f000)</span><br><span class="line">	libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007f2cb4400000)</span><br><span class="line">	/lib64/ld-linux-x86-64.so.2 (0x00007f2cb490b000)</span><br></pre></td></tr></table></figure>
+
+<p>如何判断一个函数是否需要链接呢？</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">man <span class="number">3</span> 函数名</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="静态库制作"><a href="#静态库制作" class="headerlink" title="静态库制作"></a>静态库制作</h2><ol>
+<li>将.c文件编译生成.o文件  <code>gcc -c add.c -o add</code></li>
+<li>使用ar工具制作静态库 <code>ar rcs lib库名.a add.o sub.o</code></li>
+<li>编译静态库到可执行文件中<code>gcc main.c lib库名.a -o main </code></li>
+</ol>
+<p>按这样三部编译出可执行文件后，会出现如下警告</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">test.c:<span class="number">8</span>:<span class="number">33</span>: warning: implicit declaration of function ‘add’ [-Wimplicit-function-declaration]</span><br><span class="line">    <span class="number">8</span> |         <span class="built_in">printf</span>(<span class="string">&quot;%d+%d=%d\n&quot;</span>,a,b,add(a,b));</span><br><span class="line">      |                                 ^~~</span><br><span class="line">test.c:<span class="number">9</span>:<span class="number">33</span>: warning: implicit declaration of function ‘sub’ [-Wimplicit-function-declaration]</span><br><span class="line">    <span class="number">9</span> |         <span class="built_in">printf</span>(<span class="string">&quot;%d-%d=%d\n&quot;</span>,a,b,sub(a,b));</span><br><span class="line">      |                                 ^~~</span><br><span class="line">wufang@wufang:~/C++_base_learning$ ./test</span><br></pre></td></tr></table></figure>
+
+<p>这个警告告诉：<strong>对add的隐式声明</strong>，因此，我们需要额外对使用的库函数进行声明，写在一个<code>库名.h</code>文件中，文件格式如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifndef</span> _MYMATH_H_</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _MMYMATH_H_</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">add</span><span class="params">(<span class="type">int</span>,<span class="type">int</span>)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sub</span><span class="params">(<span class="type">int</span>,<span class="type">int</span>)</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>这使用了头文件首位，目的是：防止重复引入和重复定义。<a target="_blank" rel="noopener" href="https://www.cnblogs.com/flowingwind/p/8304668.html">https://www.cnblogs.com/flowingwind/p/8304668.html</a></p>
+<p>制作好.h文件后，在.cpp文件中引入.h头文件（<code>#include &quot;mymath.h&quot;</code>）。此时的编译命令为</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc main.c ./lib/lib库名.a -o main.out -I ./inc</span><br></pre></td></tr></table></figure>
+
+<p>静态库文件放在lib中，头文件放在inc中</p>
+<h2 id="动态库制作"><a href="#动态库制作" class="headerlink" title="动态库制作"></a>动态库制作</h2><p>参考：<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1711778">https://cloud.tencent.com/developer/article/1711778</a></p>
+<ol>
+<li><p>将.c文件编译生成与位置无关的二进制文件：<code>gcc -c add.c -o add.o -fPIC </code></p>
+</li>
+<li><p>使用<code>gcc -shared</code>制作动态库：<code>gcc -shared -o lib库名.so add.o sub.o div.o</code></p>
+</li>
+<li><p>编译可执行程序，指定所使用的动态库。 <code>-l</code>指定库名，<code>-L</code>指定动态库路径, <code>-I</code>指定库的头文件路径</p>
+<p><code>gcc test.c -o test.out -l库名 -L./lib -I ./inc</code></p>
+</li>
+</ol>
+<p><strong>注意：-l后边紧跟库名，-L后紧跟库路径，空格可有可无</strong></p>
+<p>按上边步骤完成后，运行可执行文件，报错</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wufang@wufang:~/C++_base_learning/dynamic$ gcc test.c -o test.out -lmymath -L./lib -I./inc</span><br><span class="line">wufang@wufang:~/C++_base_learning/dynamic$ ./test.out </span><br><span class="line">./test.out: error <span class="keyword">while</span> loading shared libraries: libmymath.so: cannot open shared object file: No such file or directory</span><br></pre></td></tr></table></figure>
+
+<p>这个报错是因为<strong>动态链接器</strong>在运行程序的时候找不到需要链接的库。解决办法有三种，如下给出视频中的方法：</p>
+<p>即 将动态库的路径写入<strong>用户终端配置文件</strong><code>.bashrc</code>中，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">vim ~/.bachrc  <span class="comment">#打开用户自己的终端配置文件</span></span><br><span class="line"><span class="built_in">export</span> LD_LIBRARY_PATH=....  <span class="comment">#添加链接路径，最好使用绝对路径</span></span><br><span class="line"><span class="built_in">source</span> .bashrc   <span class="comment">#运行生效</span></span><br></pre></td></tr></table></figure>
+
+<p>解决方法合集：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/a3b2b6f5f0fc">https://www.jianshu.com/p/a3b2b6f5f0fc</a></p>
+<h2 id="gdb调试工具"><a href="#gdb调试工具" class="headerlink" title="gdb调试工具"></a>gdb调试工具</h2><p>基础指令：</p>
+<ul>
+<li><code>-g</code>：使用该参数编译可执行文件，得到调试表</li>
+<li><code>gdb ./a.out</code>：</li>
+<li><code>set listsize 行数</code>：设置list打印行数</li>
+<li><code>list 1</code>：从第一行开始打印</li>
+<li><code>b/break</code>：设置断点，后边可以跟着行号或者函数名</li>
+<li><code>run</code>：直接运行程序，如果设置断点了，会运行到断点，如果程序出错了，会直接运行到出错位置</li>
+<li><code>s/step</code>：下一条指令（会进入函数）</li>
+<li><code>n/next</code>：下一条指令（越过函数）</li>
+<li><code>finish</code>：进入函数后，结束当前函数调用，即退出该函数</li>
+<li><code>p/print</code>：p i 查看变量i的值</li>
+<li><code>c/continue</code>：运行程序到下一个断点或者结束</li>
+<li><code>quit</code>：退出gdb</li>
+</ul>
+<p>其它指令：</p>
+<ul>
+<li><p><code>start</code>：从main函数的第一行开始</p>
+</li>
+<li><p><code>set args</code>：设置main函数命令行参数</p>
+</li>
+<li><p><code>info b</code>：查看所有断点信息</p>
+</li>
+<li><p><code>b 20 if i = 5</code>设置条件断点，用在循环语句，嵌套递归中</p>
+</li>
+<li><p><code>bt</code>：查看程序中正在存活的栈帧</p>
+</li>
+<li><p><code>fram 栈帧编号</code>：切换栈帧</p>
+</li>
+<li><p><code>display 变量</code>：跟踪变量</p>
+</li>
+<li><p><code>undisplay 变量编号</code>：取消跟踪</p>
+</li>
+</ul>
+<h2 id="Makefile"><a href="#Makefile" class="headerlink" title="Makefile"></a>Makefile</h2><h3 id="简易版"><a href="#简易版" class="headerlink" title="简易版"></a>简易版</h3><p>test.c中是这样的</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 这里将函数声明写在了main函数中，后续会给出将函数声明写在.h中</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">add</span><span class="params">(<span class="type">int</span>,<span class="type">int</span>)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sub</span><span class="params">(<span class="type">int</span>,<span class="type">int</span>)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> a = <span class="number">14</span>, b = <span class="number">7</span>;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%d+%d=%d\n&quot;</span>,a,b,add(a,b));</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%d-%d=%d\n&quot;</span>,a,b,sub(a,b));</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;	</span><br></pre></td></tr></table></figure>
+
+<p><strong>1个规则：</strong></p>
+<p>目标：依赖条件</p>
+<p>​	（一个Tab缩进）命令</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">test:test.o add.o sub.o</span></span><br><span class="line">        gcc test.o add.o sub.o -o test</span><br><span class="line"></span><br><span class="line"><span class="section">test.o:test.c</span></span><br><span class="line">        gcc -c test.c -o test.o</span><br><span class="line"></span><br><span class="line"><span class="section">add.o:add.c</span></span><br><span class="line">        gcc -c add.c -o add.o</span><br><span class="line"></span><br><span class="line"><span class="section">sub.o:sub.c</span></span><br><span class="line">        gcc -c sub.c -o sub.o</span><br></pre></td></tr></table></figure>
+
+<p>基本原则：</p>
+<ol>
+<li>若想生成目标文件，检查规则中的依赖条件是否存在，如不存在，则寻找是否有规则用来生成该依赖文件</li>
+<li>检查规则中的目标是否需要更新，必须先检查它的所有依赖，依赖中有任何一项被更新，则目标更新</li>
+</ol>
+<p><strong>2个函数：</strong></p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">src = <span class="variable">$(<span class="built_in">wildcard</span> *.c)</span>   <span class="comment">#找到当前目录下所有后缀未.c的文件，赋值给src</span></span><br><span class="line">obj = <span class="variable">$(<span class="built_in">patsubst</span> %.c, %.o <span class="variable">$(src)</span>)</span>  <span class="comment">#将src变量中包含.c后缀的文件都替换成.o后缀</span></span><br><span class="line"></span><br><span class="line"><span class="section">test:@(obj)</span></span><br><span class="line">        gcc @(obj) -o test</span><br><span class="line"></span><br><span class="line"><span class="section">test.o:test.c</span></span><br><span class="line">        gcc -c test.c -o test.o</span><br><span class="line"></span><br><span class="line"><span class="section">add.o:add.c</span></span><br><span class="line">        gcc -c add.c -o add.o</span><br><span class="line"></span><br><span class="line"><span class="section">sub.o:sub.c</span></span><br><span class="line">        gcc -c sub.c -o sub.o</span><br><span class="line">        </span><br><span class="line"><span class="section">clean:</span></span><br><span class="line">	-rm -rf <span class="variable">$(obj)</span> test   <span class="comment">#将生成的.o文件和可执行文件都删了，rm前的&quot;-&quot;表示出错依然执行</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>3个变量：</strong></p>
+<blockquote>
+<p>$@：在一条规则的<strong>命令</strong>中，表示该规则的目标</p>
+<p>$^：在一条规则的命令中使用，用于表示这条规则的所有依赖条件</p>
+<p>$&lt;：在一条规则的命令中使用，用于表示这条规则的依赖条件列表中的第一个依赖条件</p>
+</blockquote>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">src = <span class="variable">$(<span class="built_in">wildcard</span> *.c)</span>  </span><br><span class="line">obj = <span class="variable">$(<span class="built_in">patsubst</span> %.c, %.o, <span class="variable">$(src)</span>)</span></span><br><span class="line"></span><br><span class="line"><span class="section">test:<span class="variable">$(obj)</span></span></span><br><span class="line">	gcc <span class="variable">$^</span>  -o test</span><br><span class="line"></span><br><span class="line"><span class="section">test.o:test.c</span></span><br><span class="line">	gcc -c <span class="variable">$&lt;</span> -o test.o</span><br><span class="line"></span><br><span class="line"><span class="section">add.o:add.c</span></span><br><span class="line">	gcc -c <span class="variable">$&lt;</span> -o add.o</span><br><span class="line"></span><br><span class="line"><span class="section">sub.o:sub.c</span></span><br><span class="line">	gcc -c <span class="variable">$&lt;</span> -o sub.o</span><br><span class="line"><span class="section">clean:</span></span><br><span class="line">	-rm -rf <span class="variable">$(obj)</span> test</span><br></pre></td></tr></table></figure>
+
+<p><strong>模式规则：</strong></p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">test.o:test.c</span></span><br><span class="line">	gcc -c <span class="variable">$&lt;</span> -o test.o</span><br><span class="line"><span class="section">add.o:add.c</span></span><br><span class="line">	gcc -c <span class="variable">$&lt;</span> -o add.o</span><br><span class="line"><span class="section">sub.o:sub.c</span></span><br><span class="line">	gcc -c <span class="variable">$&lt;</span> -o sub.o</span><br><span class="line"><span class="comment"># 可以将上面的结构重复的代码做如下替换</span></span><br><span class="line"><span class="section">%.o:%.c</span></span><br><span class="line">	gcc -c <span class="variable">$&lt;</span> -o <span class="variable">$@</span></span><br></pre></td></tr></table></figure>
+
+<p>最终的makefile代码可以这样写</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">src = <span class="variable">$(<span class="built_in">wildcard</span> *.c)</span>  </span><br><span class="line">obj = <span class="variable">$(<span class="built_in">patsubst</span> %.c, %.o, <span class="variable">$(src)</span>)</span></span><br><span class="line"></span><br><span class="line">CXX = gcc  <span class="comment">#编译器，可以根据需要改成g++</span></span><br><span class="line">myArgs = -Wall -g <span class="comment">#调试选项，使得编译的文件可以进行调试</span></span><br><span class="line"></span><br><span class="line"><span class="section">test:<span class="variable">$(obj)</span></span></span><br><span class="line">	<span class="variable">$(CXX)</span> <span class="variable">$^</span> -o <span class="variable">$@</span> <span class="variable">$(myArgs)</span></span><br><span class="line"><span class="section">%.o:%.c</span></span><br><span class="line">	<span class="variable">$(CXX)</span> -c <span class="variable">$&lt;</span> -o <span class="variable">$@</span> <span class="variable">$(myArgs)</span></span><br><span class="line"></span><br><span class="line"><span class="meta"><span class="keyword">.PHONY</span>:clean  #伪目标，因为文件夹中可能存在同名的clean文件</span></span><br><span class="line"><span class="section">clean:</span></span><br><span class="line">	-rm -rf <span class="variable">$(obj)</span> test</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="重构版"><a href="#重构版" class="headerlink" title="重构版"></a>重构版</h3><p>项目文件夹下有如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">inc       makefile  obj       src</span><br></pre></td></tr></table></figure>
+
+<p>其中，<code>inc</code>文件夹存放<code>头文件</code>，<code>src</code>文件夹存放<code>.c或者.cpp源代码</code>，<code>obj</code>文件夹存放<code>.o目标文件</code></p>
+<p><code>makefile</code>文件如下</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">src = <span class="variable">$(<span class="built_in">wildcard</span> ./src/*.c)</span></span><br><span class="line">obj = <span class="variable">$(<span class="built_in">patsubst</span> ./src/%.c, ./obj/%.o, <span class="variable">$(src)</span>)</span></span><br><span class="line"></span><br><span class="line">inc_path = ./inc  <span class="comment">#头文件所在位置</span></span><br><span class="line">myArgs = -Wall -g</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="section">test:<span class="variable">$(obj)</span></span></span><br><span class="line">        gcc <span class="variable">$^</span> -o test <span class="variable">$(myArgs)</span></span><br><span class="line">        </span><br><span class="line"><span class="variable">$(obj)</span>:./obj%.o:./src%.c</span><br><span class="line">        gcc -c <span class="variable">$&lt;</span> -o <span class="variable">$@</span> <span class="variable">$(myArgs)</span> -I <span class="variable">$(inc_path)</span>  <span class="comment">#在编译生成目标文件时需要指出头文件位置</span></span><br><span class="line"><span class="section">clean:</span></span><br><span class="line">        -rm -rf <span class="variable">$(obj)</span> test</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">吴方</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/11/28/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B1/">http://example.com/2023/11/28/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B1/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">欢迎来到吴方的个人博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/12/03/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B2/" title="网络编程-Linux系统编程2"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">网络编程-Linux系统编程2</div></div></a></div><div class="next-post pull-right"><a href="/2023/11/26/Tinyhttpd%E7%AC%AC%E4%BA%8C%E5%BC%B9/" title="Tinyhttpd第二弹"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Tinyhttpd第二弹</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">吴方</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">12</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/wfloveiu/-----"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/wfloveiu/" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:wufangiu666666@163.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://www.zhihu.com/people/wfloveiu" target="_blank" title="zhihu"><i class="fa-brands fa-zhihu" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Linux%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B1"><span class="toc-number">1.</span> <span class="toc-text">Linux系统编程1</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BF%AB%E6%8D%B7%E9%94%AE"><span class="toc-number">1.1.</span> <span class="toc-text">快捷键</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#gcc%E7%BC%96%E8%AF%91%E7%9A%84%E5%9B%9B%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="toc-number">1.2.</span> <span class="toc-text">gcc编译的四个阶段</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#gcc%E7%BC%96%E8%AF%91%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">1.3.</span> <span class="toc-text">gcc编译常用命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E5%BA%93%E5%92%8C%E5%8A%A8%E6%80%81%E5%BA%93"><span class="toc-number">1.4.</span> <span class="toc-text">静态库和动态库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E5%BA%93%E5%88%B6%E4%BD%9C"><span class="toc-number">1.5.</span> <span class="toc-text">静态库制作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E5%BA%93%E5%88%B6%E4%BD%9C"><span class="toc-number">1.6.</span> <span class="toc-text">动态库制作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#gdb%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7"><span class="toc-number">1.7.</span> <span class="toc-text">gdb调试工具</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Makefile"><span class="toc-number">1.8.</span> <span class="toc-text">Makefile</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E6%98%93%E7%89%88"><span class="toc-number">1.8.1.</span> <span class="toc-text">简易版</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E6%9E%84%E7%89%88"><span class="toc-number">1.8.2.</span> <span class="toc-text">重构版</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/14/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/" title="IO多路复用">IO多路复用</a><time datetime="2023-12-14T13:20:17.000Z" title="发表于 2023-12-14 21:20:17">2023-12-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/06/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B3/" title="网络编程-Linux系统编程3">网络编程-Linux系统编程3</a><time datetime="2023-12-06T06:12:45.000Z" title="发表于 2023-12-06 14:12:45">2023-12-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/03/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B2/" title="网络编程-Linux系统编程2">网络编程-Linux系统编程2</a><time datetime="2023-12-03T04:38:50.000Z" title="发表于 2023-12-03 12:38:50">2023-12-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/28/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B1/" title="网络编程-Linux系统编程1">网络编程-Linux系统编程1</a><time datetime="2023-11-28T14:07:10.000Z" title="发表于 2023-11-28 22:07:10">2023-11-28</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/26/Tinyhttpd%E7%AC%AC%E4%BA%8C%E5%BC%B9/" title="Tinyhttpd第二弹">Tinyhttpd第二弹</a><time datetime="2023-11-26T08:57:21.000Z" title="发表于 2023-11-26 16:57:21">2023-11-26</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2023 By 吴方</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">你好,欢迎来到我的博客</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
