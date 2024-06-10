@@ -4,6 +4,19 @@
   
     
     <entry>
+      <title>111.md</title>
+      <link href="/2024/06/10/%E6%A2%B3%E7%90%86cuda%E7%AE%97%E5%AD%90%E7%BC%96%E8%AF%91%E4%B8%8Epython%E8%B0%83%E7%94%A8%E7%9A%84%E6%B5%81%E7%A8%8B_%E4%BB%A5vllm%E4%B8%BA%E4%BE%8B/"/>
+      <url>/2024/06/10/%E6%A2%B3%E7%90%86cuda%E7%AE%97%E5%AD%90%E7%BC%96%E8%AF%91%E4%B8%8Epython%E8%B0%83%E7%94%A8%E7%9A%84%E6%B5%81%E7%A8%8B_%E4%BB%A5vllm%E4%B8%BA%E4%BE%8B/</url>
+      
+        <content type="html"><![CDATA[<h1 id="梳理cuda算子编译与python调用的流程"><a href="#梳理cuda算子编译与python调用的流程" class="headerlink" title="梳理cuda算子编译与python调用的流程"></a>梳理cuda算子编译与python调用的流程</h1><p>跟踪vllm在generation阶段的代码，发现其page_atttention有V1和V2两个版本。以其V2版本为例。</p><p>下图是他在<code>vllm/_custom_ops.py</code>中的定义，调用vllm_ops中的paged_attention_v2。但是这个paged_attention_v2在那里呢。</p><p>通过vscode全局搜索<code>paged_attention_v2</code>,发现其是cuda实现的。那么为什么这里在py文件中可以直接调用呢？</p><p><img src="https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202406102026982.png" alt="image-20240610202659951"></p><p><img src="https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202406102024962.png" alt="image-20240610202420869"></p><p>参考<a href="https://blog.csdn.net/u011590738/article/details/135999385%E6%96%87%E7%AB%A0%E3%80%82%E5%BC%84%E6%98%8E%E7%99%BD%E4%BA%86%E5%85%B6%E5%8E%9F%E7%90%86%E3%80%82">https://blog.csdn.net/u011590738/article/details/135999385文章。弄明白了其原理。</a></p><p>遂做记录</p>]]></content>
+      
+      
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Cuda 配置</title>
       <link href="/2024/06/08/%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%88%A0%E9%99%A4%E9%A9%B1%E5%8A%A8%E3%80%81%E5%AE%89%E8%A3%85nvidia%E9%A9%B1%E5%8A%A8%E3%80%81CUDA%20Tookit/"/>
       <url>/2024/06/08/%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%88%A0%E9%99%A4%E9%A9%B1%E5%8A%A8%E3%80%81%E5%AE%89%E8%A3%85nvidia%E9%A9%B1%E5%8A%A8%E3%80%81CUDA%20Tookit/</url>
