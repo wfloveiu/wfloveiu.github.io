@@ -1434,7 +1434,7 @@ canvas:not(#ribbon-canvas),
   }
 }
 :root {
-  --global-font-size: 16px;
+  --global-font-size: 18px;
   --global-bg: #fff;
   --font-color: #4c4948;
   --hr-border: #a4d8fa;
@@ -1544,7 +1544,7 @@ table td {
   vertical-align: middle;
 }
 *::selection {
-  background: #00c4b6;
+  background: #1c87e3;
   color: #f7f7f7;
 }
 button {
