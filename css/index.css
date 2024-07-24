@@ -1544,7 +1544,7 @@ table td {
   vertical-align: middle;
 }
 *::selection {
-  background: #1c87e3;
+  background: #00c4b6;
   color: #f7f7f7;
 }
 button {
@@ -1738,7 +1738,7 @@ figure.highlight pre .javascript .function {
 }
 #article-container pre,
 #article-container code {
-  font-size: 16px;
+  font-size: 18px;
   font-family: consolas, Menlo, 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
 }
 #article-container code {
@@ -1766,7 +1766,7 @@ figure.highlight pre .javascript .function {
 #article-container figure.highlight figcaption,
 #article-container figure.highlight .caption {
   padding: 6px 0 2px 14px;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1em;
 }
 #article-container figure.highlight figcaption a,
@@ -1812,7 +1812,7 @@ figure.highlight pre .javascript .function {
   height: 2.15em;
   background: var(--hltools-bg);
   color: var(--hltools-color);
-  font-size: 16px;
+  font-size: 18px;
 }
 #article-container .highlight-tools.closed ~ * {
   display: none;
@@ -2905,7 +2905,7 @@ h1.page-title + .tag-cloud-list {
   color: #49b1f5;
 }
 #aside-content #card-toc .toc-content .toc-link.active {
-  background: #1c87e3;
+  background: #00c4b6;
   color: #fff;
 }
 #aside-content .sticky_layout:only-child > :first-child {
@@ -3785,7 +3785,7 @@ h1.page-title + .tag-cloud-list {
   text-align: center;
 }
 #pagination .page-number.current {
-  background: #1c87e3;
+  background: #00c4b6;
   color: var(--white);
 }
 #pagination .pagination-info {
