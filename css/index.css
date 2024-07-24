@@ -1544,7 +1544,7 @@ table td {
   vertical-align: middle;
 }
 *::selection {
-  background: #00c4b6;
+  background: #1c87e3;
   color: #f7f7f7;
 }
 button {
@@ -2905,7 +2905,7 @@ h1.page-title + .tag-cloud-list {
   color: #49b1f5;
 }
 #aside-content #card-toc .toc-content .toc-link.active {
-  background: #00c4b6;
+  background: #1c87e3;
   color: #fff;
 }
 #aside-content .sticky_layout:only-child > :first-child {
@@ -3785,7 +3785,7 @@ h1.page-title + .tag-cloud-list {
   text-align: center;
 }
 #pagination .page-number.current {
-  background: #00c4b6;
+  background: #1c87e3;
   color: var(--white);
 }
 #pagination .pagination-info {
