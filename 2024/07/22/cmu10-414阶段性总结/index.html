@@ -1,0 +1,214 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>cmu10-414阶段性总结 | 欢迎来到酷狗的个人博客</title><meta name="author" content="酷狗"><meta name="copyright" content="酷狗"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="cmu10-414阶段性总结基于HW2的代码分支  inin.py__inin__.py中定义needle对外暴露的模块、类、函数 12345678910from . import opsfrom .ops import *from .autograd import Tensor, cpu, all_devicesfrom . import initfrom .init import ones,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cmu10-414阶段性总结">
+<meta property="og:url" content="http://example.com/2024/07/22/cmu10-414%E9%98%B6%E6%AE%B5%E6%80%A7%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:site_name" content="欢迎来到酷狗的个人博客">
+<meta property="og:description" content="cmu10-414阶段性总结基于HW2的代码分支  inin.py__inin__.py中定义needle对外暴露的模块、类、函数 12345678910from . import opsfrom .ops import *from .autograd import Tensor, cpu, all_devicesfrom . import initfrom .init import ones,">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avatar.jpg">
+<meta property="article:published_time" content="2024-07-22T14:33:59.000Z">
+<meta property="article:modified_time" content="2024-07-22T14:35:07.255Z">
+<meta property="article:author" content="酷狗">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avatar.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2024/07/22/cmu10-414%E9%98%B6%E6%AE%B5%E6%80%A7%E6%80%BB%E7%BB%93/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'cmu10-414阶段性总结',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-07-22 22:35:07'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">1</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 个人介绍</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="欢迎来到酷狗的个人博客"><span class="site-name">欢迎来到酷狗的个人博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 个人介绍</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">cmu10-414阶段性总结</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-07-22T14:33:59.000Z" title="发表于 2024-07-22 22:33:59">2024-07-22</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-07-22T14:35:07.255Z" title="更新于 2024-07-22 22:35:07">2024-07-22</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="cmu10-414阶段性总结"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="cmu10-414阶段性总结"><a href="#cmu10-414阶段性总结" class="headerlink" title="cmu10-414阶段性总结"></a>cmu10-414阶段性总结</h1><p>基于HW2的代码分支</p>
+<p><img src="https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202407221551271.png" alt="image-20240722155125198"></p>
+<h2 id="inin-py"><a href="#inin-py" class="headerlink" title="inin.py"></a><strong>inin</strong>.py</h2><p><code>__inin__.py</code>中定义<strong>needle对外暴露的模块、类、函数</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">from . import ops</span><br><span class="line">from .ops import *</span><br><span class="line">from .autograd import Tensor, cpu, all_devices</span><br><span class="line"></span><br><span class="line">from . import init</span><br><span class="line">from .init import ones, zeros, zeros_like, ones_like</span><br><span class="line"></span><br><span class="line">from . import data</span><br><span class="line">from . import nn</span><br><span class="line">from . import optim</span><br></pre></td></tr></table></figure>
+
+<p>第一二行含义，可以通过needle.ops.summation或者needle.summation调用summation函数</p>
+<h2 id="optim-py"><a href="#optim-py" class="headerlink" title="optim.py"></a>optim.py</h2><p>定义了一些待实现的优化器</p>
+<h2 id="autograd-py"><a href="#autograd-py" class="headerlink" title="autograd.py"></a>autograd.py</h2><p>定义了Op、Value、Tensor核心数据结构</p>
+<p>对于TensorOp，它继承了Op，有3个重要函数(属性)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">compute</span>(<span class="params">self, *args: <span class="type">Tuple</span>[NDArray]</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Calculate forward pass of operator.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Parameters</span></span><br><span class="line"><span class="string">        ----------</span></span><br><span class="line"><span class="string">        input: np.ndarray</span></span><br><span class="line"><span class="string">            A list of input arrays to the function</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Returns</span></span><br><span class="line"><span class="string">        -------</span></span><br><span class="line"><span class="string">        output: nd.array</span></span><br><span class="line"><span class="string">            Array output of the operation</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError()</span><br></pre></td></tr></table></figure>
+
+<p>输入输出都是array</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">gradient</span>(<span class="params"></span></span><br><span class="line"><span class="params">    self, out_grad: <span class="string">&quot;Value&quot;</span>, node: <span class="string">&quot;Value&quot;</span></span></span><br><span class="line"><span class="params"></span>) -&gt; <span class="type">Union</span>[<span class="string">&quot;Value&quot;</span>, <span class="type">Tuple</span>[<span class="string">&quot;Value&quot;</span>]]:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Compute partial adjoint for each input value for a given output adjoint.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Parameters</span></span><br><span class="line"><span class="string">    ----------</span></span><br><span class="line"><span class="string">    out_grad: Value</span></span><br><span class="line"><span class="string">        The adjoint wrt to the output value.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    node: Value</span></span><br><span class="line"><span class="string">        The value node of forward evaluation.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Returns</span></span><br><span class="line"><span class="string">    -------</span></span><br><span class="line"><span class="string">    input_grads: Value or Tuple[Value]</span></span><br><span class="line"><span class="string">        A list containing partial gradient adjoints to be propagated to</span></span><br><span class="line"><span class="string">        each of the input node.</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>输入输出实际都是Tensor。计算这个op对input的偏导数</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">__call__</span>(<span class="params">self, *args</span>):</span><br><span class="line">    <span class="comment"># print(self)</span></span><br><span class="line">    <span class="keyword">return</span> Tensor.make_from_op(self, args)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">make_from_op</span>(<span class="params">op: Op, inputs: <span class="type">List</span>[<span class="string">&quot;Value&quot;</span>]</span>):</span><br><span class="line">    <span class="comment"># print(op)</span></span><br><span class="line">    <span class="comment"># print(inputs)</span></span><br><span class="line">    tensor = Tensor.__new__(Tensor)</span><br><span class="line">    tensor._init(op, inputs)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> LAZY_MODE:</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> tensor.requires_grad:</span><br><span class="line">            <span class="keyword">return</span> tensor.detach()</span><br><span class="line">        tensor.realize_cached_data()</span><br><span class="line">    <span class="keyword">return</span> tensor</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">realize_cached_data</span>(<span class="params">self</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Run compute to realize the cached data&quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># avoid recomputation</span></span><br><span class="line">    <span class="keyword">if</span> self.cached_data <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="keyword">return</span> self.cached_data</span><br><span class="line">    <span class="comment"># note: data implicitly calls realized cached data</span></span><br><span class="line">    <span class="comment"># op.compute的输入输出都是NDarray类型</span></span><br><span class="line">    self.cached_data = self.op.compute(</span><br><span class="line">        *[x.realize_cached_data() <span class="keyword">for</span> x <span class="keyword">in</span> self.inputs]</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">return</span> self.cached_data</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>__call__</code>函数可以将一个对象当成一个函数使用，当使用“summation”计算a某些维度上的和时，</p>
+<p>先通过<code>Summation(axes)(a)</code>创建一个对象，并传入参数a。此时将对象当作函数使用，调用<code>__call__</code>。在<code>make_from_op</code>中创建一个新的tensor，并将其op和input设置为Summation和a。通过<code>realize_cached_data()</code>中调用op.compute()来计算其<code>cached_data</code></p>
+<p>对于Value类，关注其属性</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Value</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;A value in the computational graph.&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># trace of computational graph</span></span><br><span class="line">    op: <span class="type">Optional</span>[Op]</span><br><span class="line">    inputs: <span class="type">List</span>[<span class="string">&quot;Value&quot;</span>]</span><br><span class="line">    <span class="comment"># The following fields are cached fields for</span></span><br><span class="line">    <span class="comment"># dynamic computation</span></span><br><span class="line">    cached_data: NDArray</span><br><span class="line">    requires_grad: <span class="built_in">bool</span></span><br></pre></td></tr></table></figure>
+
+<p><code>inputs</code>是计算节点的输入，最多是2个</p>
+<p><code>cached_data</code>是这个计算节点将<code>inputs</code>通过<code>op</code>计算后的结果</p>
+<p><code>requires_grad</code>是否需要梯度，因为常数值不需要计算梯度</p>
+<p>对于Tensor类，新增了<code>grad: &quot;Tensor&quot;</code>属性(注意梯度也是Tensor类型)，关注其函数</p>
+<p>首先是<code>__init__()</code>，当使用<code>Tensor([2,3,4])</code>初始化时调用该函数。<code>make_from_op()</code>的用法上文说过。</p>
+<p>A.data的作用是创建一个和A的<code>cached_data</code>一样的Tensor，但是不具有A的op、inputs等计算图中的关系，即独立于A所在的计算图。<code>@data.setter</code>的作用是当设置修改data的数据时调用这个函数，直接将<code>A.cache_data</code>设置为<code>value.cache_data</code> 。  </p>
+<p>即<code>A.data = A.data + B.data</code>的流程是：</p>
+<ul>
+<li>A和B分别调用detach()创建一个与之cached_data一致的独立于计算图的无梯度Tensor</li>
+<li>二者相加(Tensor类对一些基本的运算做了重载，后文说明)</li>
+<li>因为这里要修改data的值，因此调用setter下的函数，将A的cached_data设置为相加后的Tensor的cached_data</li>
+</ul>
+<p>设置这样的一个属性的目的是：</p>
+<blockquote>
+<p>假如我们要计算多轮迭代之后的一个Tensor的梯度。只要最后的结果</p>
+<p>grad &#x3D; ndl.Tensor([1, 1, 1], dtype&#x3D;”float32”)</p>
+<p>lr &#x3D; 0.1</p>
+<p>for i in range(5):</p>
+<p>​	w &#x3D; w + (-lr) * grad</p>
+<p>上边写法会在多轮的”+”构建一个计算图，占用很大存储空间，但是我们只要最后的结果。</p>
+<p>而用上data属性后，如下的计算方式无需创建额外的Tensor</p>
+<p>for i in range(5):</p>
+<p>​	w.data &#x3D; w.data + (-lr) * grad.data</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@property </span><span class="comment">#将方法转换成属性，通过.data返问</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">data</span>(<span class="params">self</span>):</span><br><span class="line">    <span class="keyword">return</span> self.detach()</span><br><span class="line"></span><br><span class="line"><span class="meta">@data.setter</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">data</span>(<span class="params">self, value</span>):</span><br><span class="line">    <span class="keyword">assert</span> <span class="built_in">isinstance</span>(value, Tensor)</span><br><span class="line">    <span class="keyword">assert</span> value.dtype == self.dtype, <span class="string">&quot;%s %s&quot;</span> % (</span><br><span class="line">        value.dtype,</span><br><span class="line">        self.dtype,</span><br><span class="line">    )</span><br><span class="line">    self.cached_data = value.realize_cached_data()</span><br><span class="line"> </span><br><span class="line"><span class="keyword">def</span> <span class="title function_">detach</span>(<span class="params">self</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Create a new tensor that shares the data but detaches from the graph.&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> Tensor.make_const(self.realize_cached_data())</span><br><span class="line"></span><br><span class="line"><span class="meta">@staticmethod</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">make_const</span>(<span class="params">data, requires_grad=<span class="literal">False</span></span>): </span><br><span class="line">    tensor = Tensor.__new__(Tensor)</span><br><span class="line">    tensor._init(</span><br><span class="line">        <span class="literal">None</span>,</span><br><span class="line">        [],</span><br><span class="line">        cached_data=data</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">isinstance</span>(data, Tensor)</span><br><span class="line">        <span class="keyword">else</span> data.realize_cached_data(),</span><br><span class="line">        requires_grad=requires_grad,</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">return</span> tensor</span><br></pre></td></tr></table></figure>
+
+
+
+<p>当要进行反向传播时，通过backward函数计算<strong>计算图</strong>中节点梯度。使用方式A.backward()。</p>
+<p>在backward中调用<code>compute_gradient_of_variables()</code>函数，先通过<code>find_topo_sort()</code>使用拓扑排序计算由output_tensor结束的计算图的拓扑排序结果，进行reversed的目的是我们计算梯度的过程是从后往前算的</p>
+<h2 id="ops-ops-mathematic-py"><a href="#ops-ops-mathematic-py" class="headerlink" title="ops-&gt;ops_mathematic.py"></a>ops-&gt;ops_mathematic.py</h2><p>实现了一些算子类的前向计算与梯度计算，继承自TensorOp</p>
+<h2 id="ops-ops-logarithmatic-py"><a href="#ops-ops-logarithmatic-py" class="headerlink" title="ops-&gt;ops_logarithmatic.py"></a>ops-&gt;ops_logarithmatic.py</h2><h2 id="init-init-initializers-py"><a href="#init-init-initializers-py" class="headerlink" title="init-&gt;init_initializers.py"></a>init-&gt;init_initializers.py</h2><p>定义了几个权重的初始化类，用于初始化权重</p>
+<h2 id="nn-nn-basic-py"><a href="#nn-nn-basic-py" class="headerlink" title="nn-&gt;nn_basic.py"></a>nn-&gt;nn_basic.py</h2><p>跟神经网络相关的类，<code>Parameter</code>和<code>Module</code></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">酷狗</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2024/07/22/cmu10-414%E9%98%B6%E6%AE%B5%E6%80%A7%E6%80%BB%E7%BB%93/">http://example.com/2024/07/22/cmu10-414%E9%98%B6%E6%AE%B5%E6%80%A7%E6%80%BB%E7%BB%93/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">欢迎来到酷狗的个人博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2024/01/07/%E4%BD%BF%E7%94%A8qemu%E8%BF%90%E8%A1%8C%E5%86%85%E6%A0%B8%E5%B9%B6%E4%BD%BF%E7%94%A8Redis-benchmark%E6%B5%8B%E8%AF%95%E8%BF%81%E7%A7%BB/" title="使用qemu运行内核并使用Redis-benchmark测试迁移"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">使用qemu运行内核并使用Redis-benchmark测试迁移</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">酷狗</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">1</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/wfloveiu/-----"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/wfloveiu/" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:wufangiu666666@163.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://www.zhihu.com/people/wfloveiu" target="_blank" title="zhihu"><i class="fa-brands fa-zhihu" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#cmu10-414%E9%98%B6%E6%AE%B5%E6%80%A7%E6%80%BB%E7%BB%93"><span class="toc-number">1.</span> <span class="toc-text">cmu10-414阶段性总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#inin-py"><span class="toc-number">1.1.</span> <span class="toc-text">inin.py</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#optim-py"><span class="toc-number">1.2.</span> <span class="toc-text">optim.py</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#autograd-py"><span class="toc-number">1.3.</span> <span class="toc-text">autograd.py</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ops-ops-mathematic-py"><span class="toc-number">1.4.</span> <span class="toc-text">ops-&gt;ops_mathematic.py</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ops-ops-logarithmatic-py"><span class="toc-number">1.5.</span> <span class="toc-text">ops-&gt;ops_logarithmatic.py</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#init-init-initializers-py"><span class="toc-number">1.6.</span> <span class="toc-text">init-&gt;init_initializers.py</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#nn-nn-basic-py"><span class="toc-number">1.7.</span> <span class="toc-text">nn-&gt;nn_basic.py</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/07/22/cmu10-414%E9%98%B6%E6%AE%B5%E6%80%A7%E6%80%BB%E7%BB%93/" title="cmu10-414阶段性总结">cmu10-414阶段性总结</a><time datetime="2024-07-22T14:33:59.000Z" title="发表于 2024-07-22 22:33:59">2024-07-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/01/07/%E4%BD%BF%E7%94%A8qemu%E8%BF%90%E8%A1%8C%E5%86%85%E6%A0%B8%E5%B9%B6%E4%BD%BF%E7%94%A8Redis-benchmark%E6%B5%8B%E8%AF%95%E8%BF%81%E7%A7%BB/" title="使用qemu运行内核并使用Redis-benchmark测试迁移">使用qemu运行内核并使用Redis-benchmark测试迁移</a><time datetime="2024-01-07T13:52:00.000Z" title="发表于 2024-01-07 21:52:00">2024-01-07</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/31/Linux%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D(%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB2)/" title="Linux物理内存分配(源码阅读2)">Linux物理内存分配(源码阅读2)</a><time datetime="2023-12-31T08:41:29.000Z" title="发表于 2023-12-31 16:41:29">2023-12-31</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/25/Linux%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86(%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB1)/" title="Linux虚拟内存管理(源码阅读1)">Linux虚拟内存管理(源码阅读1)</a><time datetime="2023-12-25T09:06:24.000Z" title="发表于 2023-12-25 17:06:24">2023-12-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/14/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/" title="IO多路复用">IO多路复用</a><time datetime="2023-12-14T13:20:17.000Z" title="发表于 2023-12-14 21:20:17">2023-12-14</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2023 - 2024 By 酷狗</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">你好,欢迎来到我的博客</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
