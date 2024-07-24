@@ -2229,7 +2229,7 @@ figure.highlight pre .javascript .function {
 }
 @media screen and (min-width: 2000px) {
   .layout {
-    max-width: 70%;
+    max-width: 80%;
   }
 }
 .layout > div:first-child:not(.recent-posts) {
