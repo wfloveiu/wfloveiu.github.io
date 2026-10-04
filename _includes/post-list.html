@@ -1,0 +1,10 @@
+<div class="post-list">
+{% for post in include.posts %}
+  {% assign searchable = post.search_text | default: post.content | strip_html %}
+  <article class="post-item" data-post data-categories="{{ post.categories | jsonify | escape }}" data-search="{{ post.title | append: ' ' | append: post.description | append: ' ' | append: searchable | downcase | escape }}">
+    <h2 class="post-item-title"><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></h2>
+    <div class="post-meta"><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%Y-%m-%d' }}</time>{% for category in post.categories %}<a class="category-label" href="{{ '/categories/' | append: category | append: '/' | relative_url }}">{{ category }}</a>{% endfor %}{% if post.reading_time %}<span>{{ post.reading_time }} 分钟阅读</span>{% endif %}</div>
+    <p class="post-excerpt">{{ post.description | escape }}</p>
+  </article>
+{% endfor %}
+</div>

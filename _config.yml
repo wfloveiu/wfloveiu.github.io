@@ -1,0 +1,33 @@
+title: 酷狗
+description: 关于深度学习、推理系统与 Linux 的技术笔记。
+url: https://wfloveiu.github.io
+baseurl: ""
+lang: zh-CN
+timezone: Asia/Shanghai
+author: 酷狗
+github_url: https://github.com/wfloveiu
+permalink: /:year/:month/:day/:title/
+markdown: kramdown
+highlighter: rouge
+excerpt_separator: ""
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      nav: blog
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - migration
+  - scripts
+  - vendor
+  - .bundle
+  - requirements-migration.txt
+  - preview
+  - LICENSE

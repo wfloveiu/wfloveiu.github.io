@@ -1,0 +1,12 @@
+---
+layout: default
+---
+<section class="page-container">
+  <a class="back-link" href="{{ '/technical-blog/' | relative_url }}">← Tech Blog</a>
+  <div class="page-heading"><h1>{{ page.title | escape }}</h1></div>
+  {% assign selected = site.posts %}
+  {% if page.category %}{% assign selected = site.categories[page.category] %}{% endif %}
+  {% if page.tag %}{% assign selected = site.tags[page.tag] %}{% endif %}
+  {% if page.archive_prefix %}{% assign selected = site.posts | where_exp: 'post', 'post.url contains page.archive_prefix' %}{% endif %}
+  {% include post-list.html posts=selected %}
+</section>

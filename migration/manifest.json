@@ -1,0 +1,565 @@
+{
+  "source": "https://github.com/wfloveiu/wfloveiu.github.io",
+  "source_commit": "edfa44337cfd6565ced41a142bce6c46e387e1c5",
+  "posts": [
+    {
+      "title": "Butterfly中取消头像转动",
+      "url": "/2023/11/18/hexo1/",
+      "file": "_posts/2023-11-18-hexo1.html",
+      "date": "2023-11-18T05:35:50.000Z",
+      "updated": "2024-07-24T05:20:05.322Z",
+      "categories": [
+        "Hexo"
+      ],
+      "tags": [
+        "更改配置"
+      ],
+      "image_count": 0,
+      "code_blocks": 2,
+      "source_text_sha256": "13054608ad848f8ee187fac9aac6f5afbf804612be65fea0e768278601f3972e",
+      "source_code_sha256": [
+        "e738737faab85164b8a47d0ce8c47a8278c04a87965a466de30aaebb72af0468",
+        "453893d8a6c0e1fc0396d086a781464e10a7bbc5085722117be5ae7e6a7711a6"
+      ]
+    },
+    {
+      "title": "Vscode调试Linux内核",
+      "url": "/2023/11/20/Vscode调试Linux内核/",
+      "file": "_posts/2023-11-20-Vscode调试Linux内核.html",
+      "date": "2023-11-20T05:29:07.000Z",
+      "updated": "2024-07-24T05:20:12.478Z",
+      "categories": [
+        "Linux内核"
+      ],
+      "tags": [],
+      "image_count": 7,
+      "code_blocks": 5,
+      "source_text_sha256": "73333aa51a00fc4f9e0e084e59db14cb694f37dab2bb036bf18dc8f68e675165",
+      "source_code_sha256": [
+        "482d6ef750eec34069220e8dafc63457b55bad9464b51a1ac5d9a7f3074db9de",
+        "8294204d2b52716086b99acad675d46ee68944d04b5435882bf3a75ea6259702",
+        "290ceb48efaf74cf04c2ee614c72c6a18014ba4254b5f9f2992790cdbd724837",
+        "d1ceb20df1a8daf6fa3e6e76e244b73a02ee12e5e28a0f7fc74a684e8d29db3e",
+        "2114b92c8dc8fd32f91a7fa7d40f4ab76c061b3e7df8f1723681363b3ed0e433"
+      ]
+    },
+    {
+      "title": "使用虚拟机进行基于qemu和gdb的Linux内核调试",
+      "url": "/2023/11/20/使用虚拟机进行基于qemu和gdb的Linux内核调试/",
+      "file": "_posts/2023-11-20-使用虚拟机进行基于qemu和gdb的Linux内核调试.html",
+      "date": "2023-11-20T04:02:34.000Z",
+      "updated": "2024-07-24T05:36:59.054Z",
+      "categories": [
+        "Linux内核"
+      ],
+      "tags": [],
+      "image_count": 4,
+      "code_blocks": 21,
+      "source_text_sha256": "358914c33dc32ed099c931ad62ce34f412939746390742b4eedc5967c4c7e3a1",
+      "source_code_sha256": [
+        "75f496277439dbac55c1cd05dc3102dbd6d6c1f0355b8ddc564330db6378fbb6",
+        "0201048d0d9d4014e12b1c92749fa3b682923b87583cb2328ace249125506ff3",
+        "abd09b2136437f92ea07ce41e86439aeb7d1e33888b7380940a7d83441f2a8db",
+        "5e3d1a732dae079ff78e313a686b57aafe280edc7d27143dbad8009d98cb4199",
+        "afa74eaaf4b802cca1847bf7c6799fedcf6e3a8865ab9458349bb5847bd44909",
+        "5289a31b3274835218009aa40ef0183a495adf3c3d1883bd351543129b7a8d10",
+        "84cee080702cda688b33ddb5f3c36ef7c7a870bd6fb410c14f912b868b5fc2bf",
+        "c9eaa59526087fc529ffd3b9edb95fd611ffb7d06eedc536ad6692c98921c079",
+        "9fdc9975b01909e944c5e3384cc52256b316cb30a0ac2f0232d1048f26c99ee7",
+        "a7f284ee8cb95672651c9643e1613c9ae29d0284fa383f237f6e440630c96f9d",
+        "eb20de0ebd0adf003c15fa51a5a3da9bae3285a86210deeefa0f475fd67cc237",
+        "48f08aafb3b9e1cee58f60acb2f8fa44b661c7732cbe9449bc90244d7e3bf582",
+        "43fd90293dc6308b7c3071fb0a0265d59b72b7c2260fba5cc6d49c3e3774e367",
+        "8452b908a189305da07bd72779c2ac90b2241aa1e87697f09340c12ccc16bbbb",
+        "063c6438732f12b325fc27bdd54be7a516df753241014e93442ae6423316df95",
+        "1a0e53369e3727cb7a84fb4d04d78855598818dca3c0303d8ee07a9bdd99cbbf",
+        "d868207ee3fdc473a42278e91bc1295d8dfb4dfb28a7f7f64566c67c5bc92324",
+        "588f7ecb00acf9b2658ed77f9a4449b5f004cd2170336df94edcd7eda965833d",
+        "f932216d9954093ec8dde9095c6c50e06136b15def5004b5fdb78db4903369bb",
+        "290ceb48efaf74cf04c2ee614c72c6a18014ba4254b5f9f2992790cdbd724837",
+        "af30952edbf0d645ccdaf495c162122faf302f08f23ac74482a67f9775f01a36"
+      ]
+    },
+    {
+      "title": "网络编程-Linux系统编程1",
+      "url": "/2023/11/28/网络编程1/",
+      "file": "_posts/2023-11-28-网络编程1.html",
+      "date": "2023-11-28T14:07:10.000Z",
+      "updated": "2023-12-03T04:39:36.000Z",
+      "categories": [
+        "网络编程"
+      ],
+      "tags": [],
+      "image_count": 0,
+      "code_blocks": 18,
+      "source_text_sha256": "3d825b45cb27f02f5697c1c2bd511b26ff95f0d1704cd5d9dec0c152dad8ced1",
+      "source_code_sha256": [
+        "789d8233bb4e171d5d45c71e018fdf82cfbd4af975234ecf2a2a77db2a65b56a",
+        "aebfe9bfce610e1f9bb5e0a66c993745995c147f0cf7a1bb8b741dec6016face",
+        "13bcbdae02a9cbdec25ed8d8ca579869bb6e85adb9628e42544a7880fef5130b",
+        "8ffe4b39f9acc11ece06fe2bd75e8dd4edd5f2a4328e261ae0992bf1f3dcb76f",
+        "533c985cee192d78c67545ddb5d6661f32e81d74358b160b284256126d875571",
+        "9d0fe23c7d4d753771ed5626417abe645a9ac97abcb42ad6e8ca97e8eec2aa95",
+        "7a704021fbfb1177452006c0801767f3ed3c44cf1ec23e91b0dc234e5c15c668",
+        "170ba33dcc79e19e3701f59e1ff657b3ee0a8b0dcfa7dcc6bc047a6f7a08db58",
+        "04d0c58e345dfcdb92666b3fae9b1076e9ff387b4a54c258f42e8e6789cdefd2",
+        "bfb5b2b154f5a46b5f9a290ced568e28d6ea782c6db611b1580b470df41d0751",
+        "1bb0003085350cadc730cce0358db9f849599df42bcdf8eca1f179c6a3f23fc6",
+        "68831cef05b57830e1b6f7bb0bb52d419535bb9d991bc0472ab6ea5f4103f3eb",
+        "740f948fddf8f71022240af6da480620bba4913345be5acd43415929fed281fd",
+        "086e77d223eb756ed251679b4364d3efcec6d3407b089f7a0e62b8da44afc119",
+        "abb6782a239f941653cba691e4c90b0e243189ba23a65944fb4795890ebc0248",
+        "0fb9ada1673ee095405b11dbf6ea2037dd0428cab89e83e1f032152aaf18b35a",
+        "90c4822cf74e4f8973fe7c86728fa6abe9d01cb3ccceb88ed6c888d5a490ea72",
+        "dcb87f46aeaa2ffb6a19bf7a487fa4871441121a0f722a7d1d77012376627390"
+      ]
+    },
+    {
+      "title": "网络编程-Linux系统编程2",
+      "url": "/2023/12/03/网络编程2/",
+      "file": "_posts/2023-12-03-网络编程2.html",
+      "date": "2023-12-03T04:38:50.000Z",
+      "updated": "2023-12-06T06:12:12.000Z",
+      "categories": [
+        "网络编程"
+      ],
+      "tags": [],
+      "image_count": 2,
+      "code_blocks": 10,
+      "source_text_sha256": "c5e1068187bb6ec2cc2bb8cfcf70054764f29afd0993972081e71467af99e92d",
+      "source_code_sha256": [
+        "d80d945f9862cf973c5561d809dea7a257d7abb8af3f46daf3f2ba027c83a0e3",
+        "d569bdd962b74de73f98a823d42bf2ed5f9762cd297b3f56018fd0fd2ef3dde5",
+        "c3af65148b9be9455861dd1d33ec69c4ad8c015c397ba240ed5cb1280ba145b6",
+        "ac4e23c7ed2399e25fb579cfbb7e5bba6b37aff030f8eb17a55cc58b968ef88f",
+        "8925aeae301f57aacd629dc6a01b797f0e142fb200d3f0603d96ad3968789629",
+        "599fdc1006bc10a8272d6d64f42377f502d7dbe6d67063f2064e7be08db0db90",
+        "83ecfec0b33d16f4a3f7bb3a3b32421a9ff6392a2d1f762eefdf30ee8466c439",
+        "e4436ff275226e7a1b40e77c6ebb4cfa647a2edb3c522cedf1961b069ae6c636",
+        "2c49928487b839b5c76283d4f2dbd925ca28a0a29fea6898f7b9bb39c4a3646c",
+        "7f48038f97262138845754aaab6de291d85e046794aa47922965fee7464345c0"
+      ]
+    },
+    {
+      "title": "网络编程-Linux系统编程3",
+      "url": "/2023/12/06/网络编程3/",
+      "file": "_posts/2023-12-06-网络编程3.html",
+      "date": "2023-12-06T06:12:45.000Z",
+      "updated": "2023-12-06T06:14:34.000Z",
+      "categories": [
+        "网络编程"
+      ],
+      "tags": [],
+      "image_count": 1,
+      "code_blocks": 17,
+      "source_text_sha256": "e9f97a9c4f284451fbe91cb46bc651d9b34786848ef7540c4f8d4176db4974a0",
+      "source_code_sha256": [
+        "712254ef98e2d0243c5ddd78b0b6d719598c3863e3691f0686dfa47bbc613d6c",
+        "2c3251cdd19763b79815761fb43593e738d84ff05dcc7cb4786cf89052337f04",
+        "bfa9d2386345a097d6c9b7ae9cea8afd9a2b1a99ca5d2868c5bcafe3749ffb2a",
+        "9db9721d5e65a8ee7f94046275589a9b587479c69fa374e7f52baa2e5c5d4867",
+        "4271610f0d14241d151add3b1e9ea4e8a17119663924f7be603044d74f156dae",
+        "fdc5e2df6d8096384889cf73fe8c7794a90db31f197c7c2962660ec1078fa99d",
+        "b4bea9c8daae126dfdc388108b2f4bde3fe07817a1a5b1f69f91e2ea77f3f388",
+        "ca299825900606ecfd57da656aa07fb2ff34905dce9b3495046b2eede77d5719",
+        "200cf741c502175e9c8816976b3e05eebc0130bf5c7b5b2da80f2e2fc4a9dd6b",
+        "80c337e77d35108e67d676ac3134cf429a7a1baea520870c9f058cc1b14fbbe3",
+        "cfcb3a4bf79983c87a750b4bd890bf42f42e2758ad2c19102e507d21d8427cb2",
+        "f8b04a7833da861cddddbe9d867fa59810faac9511369800772380fbd462baf0",
+        "10952581c9f6e057d5a6519a993dceab017ae0c624628a63c8170e8b8131db98",
+        "89f00fdf8b148279ae6292b3adf05a61a6c15dfaef380dac8a9d9994dc894540",
+        "d9376df28d4611a3e02bed7c2962b920d80037fba70e5d8fda57f845b42065ca",
+        "1b7195b4f5c1c672b2de2f0fc9e47f0e7fc9ca05998684332f0a3ee9f0289621",
+        "90565b7d373bba4f27e3fa9d9e6833c499fd41e5bb268c23d299a5f70729d714"
+      ]
+    },
+    {
+      "title": "IO多路复用",
+      "url": "/2023/12/14/IO多路复用/",
+      "file": "_posts/2023-12-14-IO多路复用.html",
+      "date": "2023-12-14T13:20:17.000Z",
+      "updated": "2023-12-14T13:21:11.171Z",
+      "categories": [
+        "网络编程"
+      ],
+      "tags": [],
+      "image_count": 0,
+      "code_blocks": 5,
+      "source_text_sha256": "226c4243ba64eb9ece310eac229922ed5428f42e1b1017fc90f201e82ffc3b65",
+      "source_code_sha256": [
+        "e6b4742c9e09542662f50063160d9eb5164ceb7cd5bf8089917364ae30e5edf3",
+        "87462c7e13035336fb49f2f26c22e75f28d7af48c63b13a08efa7543ff0f21aa",
+        "e4cb7864bc0411aea4e9e13a5af5b422c1ae36a63753bedbf896310b974847e2",
+        "adb6a3b7ea169a79bacd843518fe4455783ab14543fe064f65715f2fa8d0152a",
+        "a25c8e0761f95600835dc2d3fb5216d48f97f96a7f56fe6858f5c8ae69fc718c"
+      ]
+    },
+    {
+      "title": "Linux虚拟内存管理(源码阅读1)",
+      "url": "/2023/12/25/Linux虚拟内存管理(源码阅读1)/",
+      "file": "_posts/2023-12-25-Linux虚拟内存管理(源码阅读1).html",
+      "date": "2023-12-25T09:06:24.000Z",
+      "updated": "2024-07-24T05:20:55.082Z",
+      "categories": [
+        "Linux内核"
+      ],
+      "tags": [],
+      "image_count": 8,
+      "code_blocks": 4,
+      "source_text_sha256": "81286c0407a78e69abd2ea0d22262dc3d28e9b43fbb1c3464e2c60c0bae32a4e",
+      "source_code_sha256": [
+        "b3a1db8a0d90c0b70342a65e274ae36f7f157246f02c76c6656f72dc273d5fb1",
+        "ba2b1dd7a4814e1c0042355c4c8bf6e0a832a69628517791c60a285a147f0d81",
+        "720b07383ad104b5b330b06deb1ee97619ee2a4181b88741c7842705ba1cd9a7",
+        "1f8aebb6db146534779ad65d981f4e6d9833de7240a7cc53f34c6a09c1d54156"
+      ]
+    },
+    {
+      "title": "Linux物理内存分配(源码阅读2)",
+      "url": "/2023/12/31/Linux物理内存分配(源码阅读2)/",
+      "file": "_posts/2023-12-31-Linux物理内存分配(源码阅读2).html",
+      "date": "2023-12-31T08:41:29.000Z",
+      "updated": "2024-07-24T05:21:06.775Z",
+      "categories": [
+        "Linux内核"
+      ],
+      "tags": [],
+      "image_count": 4,
+      "code_blocks": 20,
+      "source_text_sha256": "1464b64c12be64db49518b63f6835e4a519cd50aee2cde703f7446c47c7c69d5",
+      "source_code_sha256": [
+        "1d3beabf0dadb66f076ed72d1df3ffa0118e4491b9d1d61052fcb7a352e6667b",
+        "6f28c780b718831b7326e0ef53c0137eeec37a8c00c5a48750f2563c7a09fc1a",
+        "e127f49d88701e98aa37ebf9541beb7808ab750f6332845b938790f22cffa172",
+        "7d78700780cf1eca29b65453a1088051df58ab840fe8c4cfd88539ae878fbcd7",
+        "8bd6dafb35cca2da310c47bcdeed3cdb9d06a5869a27b1fe3011336a1552d188",
+        "425d424e26d04bfde51523fe3f1b2139ca119267cc3fc5ca265a47266de8dedd",
+        "d3afdd3a39386c70b65772558f852d9d0473f0946b255abac155de3c2c81ad38",
+        "2c19bdce3bbde9ab5cb5f165dc15bd844c8c434f4b6f99db9fb20c8852d19d48",
+        "cfd6cc2e32f72c226599189c6c9d7ac0c49d9f1af6c3882136e60d67f304289a",
+        "61279be9a730f98c25494c99d15f42b785d5925acb98119c7961d085ba441d01",
+        "6101192a0854cc2d950cbab2587bb44094ae423fcc4ea9f4c053053a902775bd",
+        "5d4ee6e1b57b2b747b9c8c54c96bdb5046eeef1e463df38bce5a5f4f74b8f93e",
+        "158239473da3f8c873c7295838b765335895bc11f4f00ab8d741e3b3c82682f7",
+        "65b403265224d81447a2051682d98c4d98413239a48b80441b3b4e41e319ca39",
+        "a9f9ba1ef974a6ef8e2f7fb6386dfaf31dcb6775ad20b0e7c19dce307eecb779",
+        "f1369e2e218d85160c253204ed4f3dd155b4be9373c522f6d62bc6830de2c06e",
+        "8545bfb3c924919d97c7d976e3a077270cc4b0d7478e694d1742e57e0b33c81c",
+        "55eb3de13ebc736666568df17fc67e2f936086b9876cf013e962caa1d939701f",
+        "5d3f4d62bf46420ff63121a1fd3afbc39df5d0d1a88bab82196f5a6c2aeea0ed",
+        "78f4575f40a1dd62e840899cdcec9e45495668733c24010e736600287d662763"
+      ]
+    },
+    {
+      "title": "使用qemu运行内核并使用Redis-benchmark测试迁移",
+      "url": "/2024/01/07/使用qemu运行内核并使用Redis-benchmark测试迁移/",
+      "file": "_posts/2024-01-07-使用qemu运行内核并使用Redis-benchmark测试迁移.html",
+      "date": "2024-01-07T13:52:00.000Z",
+      "updated": "2024-01-07T13:53:04.095Z",
+      "categories": [
+        "Linux内核"
+      ],
+      "tags": [],
+      "image_count": 0,
+      "code_blocks": 21,
+      "source_text_sha256": "d78f7b2b786262eea79eb82b14ee0fedd2caea095fc031baefb9aed90d9919af",
+      "source_code_sha256": [
+        "d6e2deec9d653e9fb3f73d5d9ca7a2e4385d3740490e3b3ceca36ab439e5f53f",
+        "9c7948f3c6fd77213aa5f82227c2b0c2b87416774a8c3dc68ae65acacc04b85e",
+        "c021015c28d6ad3900601c234ec17d9cf1feed40569b40dd211dc4db426752fe",
+        "1fa1b3c2fb61a3aefa647170e11aa1c026cb57ddcc28f141acdc3db7956b490b",
+        "dd3204714401d4cbf3bc66725b777097451e0c8bcf9e490c4b977f7899c5d997",
+        "40f1e17065d1020715e11c54426bd41e96c2b1f4c4efa0e865ec1739609c4bd6",
+        "bb89bf8b1b321a502d1c95253e519b44df3d426e7572adedaa27066801fe681c",
+        "6b7aadee4b0a70e95eab1dbcb14a8a18261e541c0cd4422d74f9cde169de22a5",
+        "3fb81525ccbe93294b27a7dad22f0db525c4a8fb3f31d05300d5204fcf6a7d23",
+        "606a4247f9f295934bac8a212b010d8d3b1375306880857f95260f111bad01db",
+        "feabf3ec7e1f80da5b426b8fa4a6a9dd5c9e4e96f81f37daa63f6c3fc58faee4",
+        "b8a1072aee867098e76aef38590bbb4503393d2303b9f8bc7eb8fde6e24a6621",
+        "b3ee2d6a24f7088de7201fa21472d72e7da743a04a9227162e5de84271b2d4bb",
+        "172d099cfadbeaf4bde1f25ed6883d3b186d6711b0bd5999d9892696a4ea267e",
+        "48923dc8f0997efe376e3569ff6ed44b9147d72ef17d1c0fa8ef31a39657470a",
+        "0e443e68cb9e68a5111a2a553b447cf935a0955934011d065583c2ab7cab6d7c",
+        "f4c28c2e64f5abfd6aa04e33bfe66dbd28cbf90ecf5155851109a573a94acc63",
+        "512b9534c18a046efdbe29cf91f6ce4307d92703c07d135310d1ce5ee47ec2b5",
+        "1064cffc45d5826cc3e75986e395eac3f3209141d28e8617fc648ed79a43083d",
+        "36e42679d694f08749ec3ef9db5bcbe35f15a662cba6312a7fc7272ce4a6a879",
+        "13bfc159972c64630ff301d2e19d7a1078af74a8a2776cbccc1ab6594426c1e4"
+      ]
+    },
+    {
+      "title": "服务器删除驱动、安装nvidia驱动、CUDA Tookit",
+      "url": "/2024/06/08/服务器删除驱动、安装nvidia驱动、CUDA Tookit/",
+      "file": "_posts/2024-06-08-服务器删除驱动、安装nvidia驱动、CUDA Tookit.html",
+      "date": "2024-06-08T15:24:31.000Z",
+      "updated": "2024-08-21T11:35:49.242Z",
+      "categories": [],
+      "tags": [],
+      "image_count": 4,
+      "code_blocks": 3,
+      "source_text_sha256": "48238928cbae69ed94ce239e78dd96557a791c35964c5fbea9fad0ae343e7c89",
+      "source_code_sha256": [
+        "8028de86db97dea0fc280a77305a0257542ecca8dffe4d8e8986dc268cf0787b",
+        "771a1dbe6d64a6f06c15bc27fbc5ad0c8e8b350e0bf5d275afd6d30d8a5c8603",
+        "aa84a1aa051b59da8e0172e9b1c54f68bfd21917d65d93709f70aec9294c9670"
+      ]
+    },
+    {
+      "title": "梳理cuda算子编译与python调用的流程",
+      "url": "/2024/06/10/梳理cuda算子编译与python调用的流程_以vllm为例/",
+      "file": "_posts/2024-06-10-梳理cuda算子编译与python调用的流程_以vllm为例.html",
+      "date": "2024-06-10T12:22:54.000Z",
+      "updated": "2024-08-16T05:39:35.573Z",
+      "categories": [
+        "vLLM源码阅读"
+      ],
+      "tags": [],
+      "image_count": 2,
+      "code_blocks": 0,
+      "source_text_sha256": "b5b5c5533728f1e0de2e1135bc8804acc9c73e02c5ec9804634a040f790b098a",
+      "source_code_sha256": []
+    },
+    {
+      "title": "cmu10-414 HW2总结",
+      "url": "/2024/07/22/cmu10-414阶 HW2总结/",
+      "file": "_posts/2024-07-22-cmu10-414阶 HW2总结.html",
+      "date": "2024-07-22T14:33:59.000Z",
+      "updated": "2024-08-14T12:05:18.049Z",
+      "categories": [
+        "cmu10-414"
+      ],
+      "tags": [],
+      "image_count": 2,
+      "code_blocks": 7,
+      "source_text_sha256": "3441cd986178322538e6013e396890ac481da3f18dca606f90a6095a06aeeef5",
+      "source_code_sha256": [
+        "a7061a240256c885c193a6ba6f5b529213844117841e869530f986e0ffdcad94",
+        "d9160cdacd2aa81969ac344927d8668470cc6f67fd86ef9364bb4a3bd7a3c466",
+        "650c1d7f1b24e87b75b8fe4ca5a505fc5b49e127c17d5bbbec0b2e15dd000ec7",
+        "63c9ecec4062582c128648f83c4bd749ae52ce07a35d86dded5fcfaac7e57f9c",
+        "0ecd5c423ae7931bd6a1f279e99388983bf0360b4bdf09c42c1822e3e3af0b18",
+        "dc556e71a12c0e9ac13887771d8f4e1dc500154d07605687f02bf7b12b5180ca",
+        "1832536b3b2f71d2b2b07418988aa1023725117365b6e16646c62c594719e6dc"
+      ]
+    },
+    {
+      "title": "cmu 10-414 HW2",
+      "url": "/2024/07/27/cmu 10-414 HW2/",
+      "file": "_posts/2024-07-27-cmu 10-414 HW2.html",
+      "date": "2024-07-27T15:43:17.000Z",
+      "updated": "2024-07-27T15:44:51.393Z",
+      "categories": [
+        "cmu10-414"
+      ],
+      "tags": [],
+      "image_count": 2,
+      "code_blocks": 23,
+      "source_text_sha256": "e13ec009d5b44b8972e1267448e8a186bbe8d8e3085f2d101ae733610fab0ce9",
+      "source_code_sha256": [
+        "83094910c0b6432e1ae7268b5a994cfdbb17b31c851abce3c710a40ad2943990",
+        "e3dd3bd14dd4b008d2d21f55e71f433b2200c453984847332b774fc4596b771a",
+        "f6df6844de700db048e8d9154c8b6b3e0dbf377285fb8faf65bf15c7b28c04fb",
+        "eb2974d2e9c4ff97a4c988b76d67377320350cd94ad9786a0bf5753bea142b51",
+        "b743eac7ab5b19e132303fa4b5280d8adb21893f2832c4a6b60e43f577cefd26",
+        "97275a2c7db681eaa1e1003d315e082ca62ef72789c2b3902178d75ddad9497f",
+        "c0281868b1fad8792c8186dcbca3b5b0e77969287aa0c47fec4a5b05bb874eff",
+        "4b3fcfd7ed252ab8ffb13e617eadcd226003d8a723a83eddf86f9ab94a86691a",
+        "4c744c24768669711e725db1e75e75a1cb42b369c06ce58f21dac8e73700395a",
+        "76a3ad808e1bb3d35020fbf3b005bd2e851cccb94b363fe816b2e9cd9c2cd9f7",
+        "7b6e3c6a4665242cddc74875f9c579c28d1af31fbcedc95c3e0adf0d0e5f9a4c",
+        "1918030a68879c83e4c03311884cb5c0191b528b9fb873c488e078e710231a1d",
+        "8a1033bba2804f8552a26260787920d16739e8820b5c1e1201cc28d9eb894dea",
+        "18df0acf4cdf1d4275c74105d4e0b124963ae4cd83543c6e00561964f5d4478d",
+        "28a85c878029918c8b836663d2788b1be486aaddb4ec1ae614551687e3a8d298",
+        "3783104f64a4ccbfec8b09a7b0d014af05d5287a2ddbbb8f60fc8e6f451aea6e",
+        "f58e0f35119785074f090a9f04bc75b2257858662ccf31c3a47851b35aab1202",
+        "7a534eb277df0370a93e0aa18d69b3eb528728f3db80b6f2d061dda31b6f5a08",
+        "55f31472a5799cd0d6be8b5ebd4cc23cecb53ca742da2babfa86146d17163e88",
+        "663946b709a988991d44217e27306b7c56a7806626c2b278cb5b8979cc37e775",
+        "09e60a3c3cd9b21f73effbcb32ecf5c77b2236ed9432957042cce7bb46990103",
+        "e9ed1682e1d5d9eb1ad804635a13be1a67ecc6b7ed75be84df6a090303300575",
+        "700ba4532c6fc35516151398ce8fab94e4df159c152a479345790c3fd67c72de"
+      ]
+    },
+    {
+      "title": "vLLM中的Executor与Worker",
+      "url": "/2024/07/31/vLLM中的Executor与Worker/",
+      "file": "_posts/2024-07-31-vLLM中的Executor与Worker.html",
+      "date": "2024-07-31T11:45:17.000Z",
+      "updated": "2024-07-31T13:34:22.090Z",
+      "categories": [
+        "vLLM源码阅读"
+      ],
+      "tags": [],
+      "image_count": 0,
+      "code_blocks": 9,
+      "source_text_sha256": "f457b28409071b1757912593683b822b5d3238941ce88a02cc9416fa5f3958e6",
+      "source_code_sha256": [
+        "ff33d1a3fef36f574ecbf82f787755df9c5120cca5ae60e597aaab59b967d5fb",
+        "eb9e520c4e73cdad29babb4d49c532b3d371371cc26e049845d04eda7a6e4762",
+        "74671f0102c3c847e5031be3ff383ed84196b7b547af3cec795b08e1d26a271e",
+        "3c585b11ec6c680471513bc15f9a653ef7a5ae941e1c23c9f80d296191034244",
+        "721253e5a39f3f979408e9d9820bb3b63563a5be69b0bb398512340c4d55079a",
+        "42699f26b0ed34b7a19e2750d68b8e3566cadb1db1c6c449bc52f488656654c6",
+        "1ae5e5aded4f9643a7bb290ecc2eba81f441905b597132d517187153a2761d3b",
+        "b9185b097ebfe5f9725b0b292172445be7a7820d79e57aab7af98e15e4576a0c",
+        "c5b78e7958213f321fbbdfe7cb3443652179d7d76652f72ed02c9e876780ed1f"
+      ]
+    },
+    {
+      "title": "cmu 10-414 HW4",
+      "url": "/2024/08/14/cmu 10-414 HW4/",
+      "file": "_posts/2024-08-14-cmu 10-414 HW4.html",
+      "date": "2024-08-14T12:03:23.000Z",
+      "updated": "2024-08-14T12:05:03.780Z",
+      "categories": [
+        "cmu10-414"
+      ],
+      "tags": [],
+      "image_count": 9,
+      "code_blocks": 8,
+      "source_text_sha256": "ecb35e086f1239b99a97239ace0cf299fb1a23b59b3eb905b99ee3bfa2a32101",
+      "source_code_sha256": [
+        "b6a24bd4e8f7c7dad5c633a46b5a2bdc5fe40b476e2dbfc638cdb9bfe152ddec",
+        "2b8d4b2ba6eb3de0211cfc5c6073e40300234ba2df174df71ec8968d55434288",
+        "603e9af9ab6a99d5571fe3e6b715bcbf50336c420902e805accb9ddcf08ecee5",
+        "fdebd11a7a420f777b62cc4e7462abdc0f62f8e658289ddce303ea30e86c2133",
+        "2a6e98c963bc447e934ce936763dbad168a06d0455c18802bcb7459f0d539ce1",
+        "d7e96a3e632fb14b0e3a8eadd2f62cf3ceaec04ce11b53f8a3fd009ef222d0ce",
+        "31f31e141e60c002b4a13a7fe4028cae7c56626abd8e49383254911bd387e41e",
+        "06eee2bd4824458f1bd1a7af270acba8c5e9c8de942238fa7f89293a8a6853ab"
+      ]
+    },
+    {
+      "title": "基于Pytorch复现Transformer",
+      "url": "/2024/08/18/基于Pytorch复现Transformer/",
+      "file": "_posts/2024-08-18-基于Pytorch复现Transformer.html",
+      "date": "2024-08-18T14:14:45.000Z",
+      "updated": "2024-08-18T14:17:38.382Z",
+      "categories": [],
+      "tags": [],
+      "image_count": 12,
+      "code_blocks": 13,
+      "source_text_sha256": "956f0243d20cc2656e93d262d97450074827d9a8fbdd80f1106081aa7c3adf6b",
+      "source_code_sha256": [
+        "a16533a6d01e7cdc8fd55da20f898d5c456034ab8f07ea08425d675d30033107",
+        "fa8dab67cb7d4067c5f9db325180ed1c38ae6ecb189c59605d7dd5775117db42",
+        "70559a41890b38cd6dc3603f279a59f80638946bbeb7a4db070f5365e71a49ab",
+        "7c9a34320de394a5b831f7b2a038d590c838dffdf01385bedd977550e80addf4",
+        "2a928f9e512ea92f4c3aeac1cbb7fb6cfe0db908074280c1659dbf5d5b093956",
+        "20448a08db7f5d0c786899f2528d518913d82aca31c7eb58eeb5d0cf432b3c70",
+        "fd143e1e42b61ef68e8f2ab700854b767a280d6419c9ec6173e0721096bb1ed9",
+        "a2ac89c09d87bfa990db3076ce755e27e55fec82cff1eb852dc7794bfe595679",
+        "b7b8b44f1d0258511a3a2f02b858470cb932711ad0ba832ad5329b0a110a09d2",
+        "d93bd9882424b68dc9038de0cd52bfeccca65ec838158a63dc0c8bb1c8be90ca",
+        "3890a60d616608a3449a0fe5005e395786af7b46fe34b307e86c95fbfcddde64",
+        "33885accef5d6101e60fc44e0bc085e3dbf24bcaa11e9753fa718331f899b42c",
+        "a9524a866615b03270ef62ae5088e8b036e0b9f506764513b96e7582f81e88d5"
+      ]
+    },
+    {
+      "title": "基于llam2学习推理过程",
+      "url": "/2024/08/21/基于llam2学习推理过程/",
+      "file": "_posts/2024-08-21-基于llam2学习推理过程.html",
+      "date": "2024-08-21T11:34:09.000Z",
+      "updated": "2024-08-21T11:36:29.767Z",
+      "categories": [],
+      "tags": [],
+      "image_count": 0,
+      "code_blocks": 6,
+      "source_text_sha256": "f12b6ad65ad5f4674e889a2ddd62dbdb16672bd06941d2928d08c0b77603edf1",
+      "source_code_sha256": [
+        "535679ecac62c8a685e55e839fdea159dca493d6311dbb4ebaf323a42b07a92f",
+        "db580cab209fb6935bdac93ce01548b7a5244dd917d127c0187e8a3ea8562dc6",
+        "04d56c883ee872c0bb80ca82e571addf784b74174cf2f3ce050e94a01b53825c",
+        "ad206b52a0a069dc55f3c73f561efa06a6a92475a010630f72df68a3f70dfe51",
+        "d59299e39374d657345c2eaee1d3e032c59a0e27d29da2ee66b183e26527f226",
+        "35dd4a69c3b65397c03fa7c3d40dec8f538d35167333bc98d34869e22cfb6181"
+      ]
+    },
+    {
+      "title": "如何计算CPU的理论最大内存带宽",
+      "url": "/2024/08/21/如何计算CPU的理论最大内存带宽/",
+      "file": "_posts/2024-08-21-如何计算CPU的理论最大内存带宽.html",
+      "date": "2024-08-21T14:14:51.000Z",
+      "updated": "2024-09-03T08:57:49.881Z",
+      "categories": [],
+      "tags": [],
+      "image_count": 3,
+      "code_blocks": 1,
+      "source_text_sha256": "2e6e025a5e86e5c27abf84401d00b18ffc4ae4eba900100595bfeab4f6993894",
+      "source_code_sha256": [
+        "16fdf381c40de0ea057a952d9a225679bf8f1eac310d007679ae63ecbc25fc7e"
+      ]
+    }
+  ],
+  "assets": {
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201245007.png": "/assets/images/posts/202311201245007.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201246229.png": "/assets/images/posts/202311201246229.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201247886.png": "/assets/images/posts/202311201247886.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201248231.png": "/assets/images/posts/202311201248231.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201251048.png": "/assets/images/posts/202311201251048.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201300424.png": "/assets/images/posts/202311201300424.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201305050.png": "/assets/images/posts/202311201305050.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201128412.png": "/assets/images/posts/202311201128412.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201127209.png": "/assets/images/posts/202311201127209.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201135953.png": "/assets/images/posts/202311201135953.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202311201136740.png": "/assets/images/posts/202311201136740.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312012042842.png": "/assets/images/posts/202312012042842.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312021229678.png": "/assets/images/posts/202312021229678.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312031438241.png": "/assets/images/posts/202312031438241.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312251453156.png": "/assets/images/posts/202312251453156.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312251455900.png": "/assets/images/posts/202312251455900.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312251455383.png": "/assets/images/posts/202312251455383.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312251458277.png": "/assets/images/posts/202312251458277.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312251503730.png": "/assets/images/posts/202312251503730.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312251733199.png": "/assets/images/posts/202312251733199.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312251733977.png": "/assets/images/posts/202312251733977.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312251734943.png": "/assets/images/posts/202312251734943.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312311546874.png": "/assets/images/posts/202312311546874.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312291118186.png": "/assets/images/posts/202312291118186.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312311647985": "/assets/images/posts/202312311647985.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202312311639085.png": "/assets/images/posts/202312311639085.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202406011228781.png": "/assets/images/posts/202406011228781.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202406011859370.png": "/assets/images/posts/202406011859370.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202406011902985.png": "/assets/images/posts/202406011902985.png",
+    "C:\\Users\\WuFang\\AppData\\Roaming\\Typora\\typora-user-images\\image-20240601190412553.png": null,
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202406102026982.png": "/assets/images/posts/202406102026982.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202406102024962.png": "/assets/images/posts/202406102024962.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202407221551271.png": "/assets/images/posts/202407221551271.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202407241705501.png": "/assets/images/posts/202407241705501.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202407241018831.png": "/assets/images/posts/202407241018831.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202407241019761.png": "/assets/images/posts/202407241019761.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408141446493.png": "/assets/images/posts/202408141446493.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408131408944.png": "/assets/images/posts/202408131408944.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408131535156.png": "/assets/images/posts/202408131535156.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408131535887.png": "/assets/images/posts/202408131535887.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408131535340.png": "/assets/images/posts/202408131535340.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408131546416.png": "/assets/images/posts/202408131546416.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408131550359.png": "/assets/images/posts/202408131550359.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408131542720.png": "/assets/images/posts/202408131542720.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408141351273.png": "/assets/images/posts/202408141351273.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182102706.png": "/assets/images/posts/202408182102706.png",
+    "https://pic3.zhimg.com/80/v2-b4031fa91e2ca39199b49e686884ad8a_1440w.webp": "/assets/images/posts/transformer-architecture.webp",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182104577.png": "/assets/images/posts/202408182104577.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182107154.png": "/assets/images/posts/202408182107154.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182112679.png": "/assets/images/posts/202408182112679.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182116217.jpg": "/assets/images/posts/202408182116217.jpg",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182136845.png": "/assets/images/posts/202408182136845.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182137557.png": "/assets/images/posts/202408182137557.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182138169.png": "/assets/images/posts/202408182138169.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182136001.webp": "/assets/images/posts/202408182136001.webp",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182140535.jpg": "/assets/images/posts/202408182140535.jpg",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408182154387.webp": "/assets/images/posts/202408182154387.webp",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408212205791.png": "/assets/images/posts/202408212205791.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408212210473.png": "/assets/images/posts/202408212210473.png",
+    "https://raw.githubusercontent.com/wfloveiu/blogImage/main/img/202408232035618.png": "/assets/images/posts/202408232035618.png"
+  },
+  "warnings": [
+    {
+      "post": "/2024/06/08/服务器删除驱动、安装nvidia驱动、CUDA Tookit/",
+      "source": "C:\\Users\\WuFang\\AppData\\Roaming\\Typora\\typora-user-images\\image-20240601190412553.png",
+      "reason": "Image absent from the published site and public image repository."
+    }
+  ]
+}

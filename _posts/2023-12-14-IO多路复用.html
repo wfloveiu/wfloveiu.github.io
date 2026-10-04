@@ -1,0 +1,130 @@
+---
+layout: post
+title: IO多路复用
+date: '2023-12-14T13:20:17.000Z'
+last_modified_at: '2023-12-14T13:21:11.171Z'
+permalink: /2023/12/14/IO多路复用/
+categories:
+- 网络编程
+tags: []
+description: 使用内核态来判断那个套接字描述符有数据
+reading_time: 3
+toc:
+- text: IO多路复用
+  id: IO多路复用
+  level: 1
+- text: select
+  id: select
+  level: 2
+- text: poll
+  id: poll
+  level: 2
+- text: epoll
+  id: epoll
+  level: 2
+search_text: 'IO多路复用 select 内容介绍 代码 sockfd = socket(AF_INEF,SOCK_STREAM, 0 ); //服务器端监听套接字 memset (&addr, 0 , sizeof (addr)); //初始化addr_in类型 addr.sin_family = AF_INET; //IPV4 addr.sin_port = hton( 2000 ); //端口2000 addr_sin_addr.s_addr = INADDR_ANY; // bind(sockfd, ( struct sockaddr*)&addr, sizeof (addr)); //绑定陶套接字和套接口地址 listen(socfd, 5 ); // for ( int i = 0 ; i < 5 ; i++) { memset (&client, 0 , sizeof (client)); //初始化客户端套接字 addrlen = sizeof (client); fds[i] = accept(sockfd, ( struct sockaddr*)&client, &addrlen); if (fds[i] > max) max = fds[i]; //记录最大的文件描述符 } while ( 1 ) { fd_set rset; FD_ZERO(&rest); //全部置为0 for ( int i= 0 ;i< 5 ;i++) FD_SET(fds[i],&rset); //将我们关心的文件描述符设为1 select(max+ 1 , &rest, NULL , NULL , NULL ); // select函数会将所有的文件描述符中，有数据到来的那些描述符的对应位置置位1，其余位置置位0， //通过for循环判断哪些文件描述符被置位，从而读取其中的数据 for ( int i= 0 ;i< 5 ;i++) { if (FD_ISSET(fds[i], &rset)) { memset (buffer, 0 ,MAXBUF); read(fds[i],buffer,MAXBUF); //读操作 puts (buffer); } } } 使用内核态来判断那个套接字描述符有数据 缺点：有1024个文件描述符的限制；fd_set不可以重用，每次循环需要重新置位0；内核态复制文件描述符导致文件描述符列表越长需要复制的次数越多；O(n)遍历判断哪个位置的描述符被置位
+  poll poll函数格式如下： # include <poll.h> int poll ( struct pollfd * fds, unsigned int nfds, int timeout) ; 参数：指向pollfd结构体类型的指针，数组指针 ​            关注的文件描述符的个数 ​             时间 poolfd结构体定义如下 struct pollfd { int fd; /* 文件描述符 */ short events; /* 等待的事件 */ short revents; /* 实际发生了的事件 */ } ; for ( int i= 0 ;i< 5 ;i++) { memset (&client, 0 , sizeof (client)); addrlen = sizeof (client); pollfds[i].fd = accept(sockfd, ( struct sockaddr*)&client, &addrlen); //pollfds是pollfd类型的结构体数组 pollfds[i].events = POLLIN; //关注的是有数据可读事件 } sleep( 1 ); while ( 1 ) { poll(pollfds, 5 , 50000 ); //调用poll函数，pollfds[i]发生了POLLIN事件，                                                  //把pollfds[i].revents对应于POLLIN置位为1 for ( int i= 0 ;i< 5 ;i++) { if (pollfds[i].revents & POLLIN) //可能有多个关注事件，要与对应的事件做与操作 { pollfds[i].revents = 0 ; //复位 //处理数据 } } } epoll epoll函数原理详解 struct epoll_event events[5]; int c = epoll_create1(10); int epfd = epoll_create(10);//创建一个epoll对象，返回文件描述符,参数只要大于0即可 ....... ....... for(int i=0;i<5;i++) { static struct
+  epoll_event ev;  //临时变量 memset(&client, 0, sizeof(client)); addrlen = sizeof(client); ev.data.fd = accept(sockfd, (struct sockaddr*)&client, &addrlen); //监听的套接字文件描述符 ev.events = EPOLLIN; //监听事件是读事件 epoll_ctl(epfd, EPOLL_CTL_ADD, ev.data.fd, &ev); } while(1) { nfds = epoll_wait(epfd, events, 5, 10000); for(i=0;i<ndfs;i++) { //处理数据 } }'
+migrated_from: Hexo
+---
+{% raw %}
+<h1 id="IO多路复用">IO多路复用</h1><h2 id="select">select</h2><p><a href="https://www.cnblogs.com/alantu2018/p/8612722.html" rel="noopener noreferrer" target="_blank">内容介绍</a></p>
+<p>代码</p>
+<pre class="highlight"><code class="language-c">sockfd = socket(AF_INEF,SOCK_STREAM,<span class="number">0</span>);  <span class="comment">//服务器端监听套接字</span>
+<span class="built_in">memset</span>(&amp;addr, <span class="number">0</span>, <span class="keyword">sizeof</span>(addr)); <span class="comment">//初始化addr_in类型</span>
+addr.sin_family = AF_INET; <span class="comment">//IPV4</span>
+addr.sin_port = hton(<span class="number">2000</span>);<span class="comment">//端口2000</span>
+addr_sin_addr.s_addr = INADDR_ANY; <span class="comment">// </span>
+
+bind(sockfd, (<span class="keyword">struct</span> sockaddr*)&amp;addr, <span class="keyword">sizeof</span>(addr)); <span class="comment">//绑定陶套接字和套接口地址</span>
+listen(socfd, <span class="number">5</span>);<span class="comment">//</span>
+
+<span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++)
+{
+    <span class="built_in">memset</span>(&amp;client,<span class="number">0</span>,<span class="keyword">sizeof</span>(client)); <span class="comment">//初始化客户端套接字</span>
+    addrlen = <span class="keyword">sizeof</span>(client);
+    fds[i] = accept(sockfd, (<span class="keyword">struct</span> sockaddr*)&amp;client, &amp;addrlen);
+    <span class="keyword">if</span>(fds[i] &gt; max)
+        max = fds[i];<span class="comment">//记录最大的文件描述符</span>
+}
+
+<span class="keyword">while</span>(<span class="number">1</span>)
+{
+    fd_set rset;
+    FD_ZERO(&amp;rest); <span class="comment">//全部置为0</span>
+    <span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">0</span>;i&lt;<span class="number">5</span>;i++)
+        FD_SET(fds[i],&amp;rset); <span class="comment">//将我们关心的文件描述符设为1</span>
+    
+    select(max+<span class="number">1</span>, &amp;rest, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);
+    <span class="comment">// select函数会将所有的文件描述符中，有数据到来的那些描述符的对应位置置位1，其余位置置位0，</span>
+    <span class="comment">//通过for循环判断哪些文件描述符被置位，从而读取其中的数据</span>
+    <span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">0</span>;i&lt;<span class="number">5</span>;i++)
+    {
+        <span class="keyword">if</span>(FD_ISSET(fds[i], &amp;rset))
+        {
+            <span class="built_in">memset</span>(buffer,<span class="number">0</span>,MAXBUF);
+            read(fds[i],buffer,MAXBUF); <span class="comment">//读操作</span>
+            <span class="built_in">puts</span>(buffer);
+        }
+    }
+}</code></pre>
+<p>使用内核态来判断那个套接字描述符有数据</p>
+<p>缺点：有1024个文件描述符的限制；fd_set不可以重用，每次循环需要重新置位0；内核态复制文件描述符导致文件描述符列表越长需要复制的次数越多；O(n)遍历判断哪个位置的描述符被置位</p>
+<h2 id="poll">poll</h2><p>poll函数格式如下：</p>
+<pre class="highlight"><code class="language-c"><span class="meta"># <span class="keyword">include</span> <span class="string">&lt;poll.h&gt;</span></span>
+<span class="type">int</span> <span class="title function_">poll</span> <span class="params">(<span class="keyword">struct</span> pollfd * fds, <span class="type">unsigned</span> <span class="type">int</span> nfds, <span class="type">int</span> timeout)</span>;</code></pre>
+<p>参数：指向pollfd结构体类型的指针，数组指针</p>
+<p>​            关注的文件描述符的个数</p>
+<p>​             时间</p>
+<p>poolfd结构体定义如下</p>
+<pre class="highlight"><code class="language-c"><span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> {</span>
+    <span class="type">int</span> fd;         <span class="comment">/* 文件描述符 */</span>
+    <span class="type">short</span> events;         <span class="comment">/* 等待的事件 */</span>
+    <span class="type">short</span> revents;       <span class="comment">/* 实际发生了的事件 */</span>
+} ; </code></pre>
+<pre class="highlight"><code class="language-c"><span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">0</span>;i&lt;<span class="number">5</span>;i++)
+{
+    <span class="built_in">memset</span>(&amp;client,<span class="number">0</span>, <span class="keyword">sizeof</span>(client));
+    addrlen = <span class="keyword">sizeof</span>(client);
+    pollfds[i].fd = accept(sockfd, (<span class="keyword">struct</span> sockaddr*)&amp;client, &amp;addrlen);<span class="comment">//pollfds是pollfd类型的结构体数组</span>
+    pollfds[i].events = POLLIN;<span class="comment">//关注的是有数据可读事件</span>
+}
+sleep(<span class="number">1</span>);
+<span class="keyword">while</span>(<span class="number">1</span>)
+{
+    poll(pollfds, <span class="number">5</span>, <span class="number">50000</span>); <span class="comment">//调用poll函数，pollfds[i]发生了POLLIN事件，                                                  //把pollfds[i].revents对应于POLLIN置位为1</span>
+    <span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">0</span>;i&lt;<span class="number">5</span>;i++)
+    {
+        <span class="keyword">if</span>(pollfds[i].revents &amp; POLLIN)  <span class="comment">//可能有多个关注事件，要与对应的事件做与操作</span>
+        {
+            pollfds[i].revents = <span class="number">0</span>;<span class="comment">//复位</span>
+            <span class="comment">//处理数据</span>
+        }
+    }
+}</code></pre>
+<h2 id="epoll">epoll</h2><p><a href="https://zhuanlan.zhihu.com/p/406175793" rel="noopener noreferrer" target="_blank">epoll函数原理详解</a></p>
+<pre class="highlight"><code class="language-plaintext">struct epoll_event events[5];
+int c = epoll_create1(10);
+int epfd = epoll_create(10);//创建一个epoll对象，返回文件描述符,参数只要大于0即可
+.......
+.......
+for(int i=0;i&lt;5;i++)
+{
+    static struct epoll_event ev;  //临时变量
+    memset(&amp;client, 0, sizeof(client));
+    addrlen = sizeof(client);
+    ev.data.fd = accept(sockfd, (struct sockaddr*)&amp;client, &amp;addrlen); //监听的套接字文件描述符
+    ev.events = EPOLLIN; //监听事件是读事件
+    epoll_ctl(epfd, EPOLL_CTL_ADD, ev.data.fd, &amp;ev);
+}
+
+while(1)
+{
+    nfds = epoll_wait(epfd, events, 5, 10000);
+    for(i=0;i&lt;ndfs;i++)
+    {
+        //处理数据
+    }
+}</code></pre>
+
+{% endraw %}

@@ -1,0 +1,35 @@
+- id: anchorattention
+  title: "AnchorAttention: Difference-Aware Sparse Attention with Stripe Granularity"
+  year: 2025
+  venue: EMNLP 2025
+  authors:
+    - name: Yu Zhang
+    - name: Dong Guo
+    - name: Fang Wu
+      self: true
+    - name: Guoliang Zhu
+    - name: Dian Ding
+    - name: Yiming Zhang
+  topics:
+    - Sparse Attention
+    - Efficient LLMs
+  arxiv: https://arxiv.org/abs/2505.23520
+  anthology: https://aclanthology.org/2025.emnlp-main.430/
+  pdf: https://aclanthology.org/2025.emnlp-main.430.pdf
+  summary: >-
+    AnchorAttention accelerates long-context LLM prefill with dynamically selected,
+    stripe-shaped attention regions. It uses an anchor derived from shared attention
+    patterns to identify important positions, then computes attention through discrete
+    key-value loading. This finer granularity improves sparsity while retaining useful
+    attention information. At a context length of 128k tokens, the method reports a
+    1.44× speedup over earlier leading approaches, together with higher recall.
+  bibtex: |
+    @inproceedings{zhang-etal-2025-anchorattention,
+      title = {AnchorAttention: Difference-Aware Sparse Attention with Stripe Granularity},
+      author = {Zhang, Yu and Guo, Dong and Wu, Fang and Zhu, Guoliang and Ding, Dian and Zhang, Yiming},
+      booktitle = {Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing},
+      year = {2025},
+      pages = {8537--8549},
+      doi = {10.18653/v1/2025.emnlp-main.430},
+      url = {https://aclanthology.org/2025.emnlp-main.430/}
+    }

@@ -1,0 +1,784 @@
+---
+layout: post
+title: Linux物理内存分配(源码阅读2)
+date: '2023-12-31T08:41:29.000Z'
+last_modified_at: '2024-07-24T05:21:06.775Z'
+permalink: /2023/12/31/Linux物理内存分配(源码阅读2)/
+categories:
+- Linux内核
+tags: []
+description: 首先，还是给出参考文献： 参考博客
+reading_time: 31
+toc:
+- text: 每CPU页框高速缓存
+  id: 每CPU页框高速缓存
+  level: 2
+- text: 伙伴系统
+  id: 伙伴系统
+  level: 2
+- text: 内核物理内存分配
+  id: 内核物理内存分配
+  level: 2
+- text: 内存分配
+  id: 内存分配
+  level: 3
+- text: 内存释放
+  id: 内存释放
+  level: 3
+- text: 规范物理内存分配行为的掩码gfp_mask
+  id: 规范物理内存分配行为的掩码gfp-mask
+  level: 2
+- text: 物理内存分配内核源码实现
+  id: 物理内存分配内核源码实现
+  level: 2
+- text: 内存分配行为标识掩码
+  id: 内存分配行为标识掩码
+  level: 3
+- text: 内存分配的心脏 __alloc_pages
+  id: 内存分配的心脏-alloc-pages
+  level: 3
+- text: prepare_alloc_pages函数
+  id: prepare-alloc-pages函数
+  level: 3
+- text: alloc_pages_slowpath函数
+  id: alloc-pages-slowpath函数
+  level: 3
+search_text: "首先，还是给出参考文献： 参考博客 每CPU页框高速缓存 因为内存经常请求单个页框，因此为了提升性能，在伙伴系统之外又定义了一个per-CPU高速缓存 struct zone { // 实现每CPU页框的高速缓存。里面包含每个CPU的单页框的链表 struct per_cpu_pages __ percpu * per_cpu_pageset ; } struct per_cpu_pages { int count; int high; // 当需要增加或者减少高速缓存页框时，操作的页框个数 int batch; // 空闲期间的批量释放因子 short free_factor; # ifdef CONFIG_NUMA short expire; /* When 0, remote pagesets are drained */ # endif // 每种迁移类型为一个链表 struct list_head lists [ NR_PCP_LISTS ]; }; 其中的 NR_PCP_LISTS 被定义为 # define NR_PCP_LISTS (MIGRATE_PCPTYPES * (PAGE_ALLOC_COSTLY_ORDER + 1 + NR_PCP_THP)) /* MIGRATE_PCPTYPES为页面迁移类型，包括MIGRATE_UNMOVABLE,MIGRATE_MOVABLE,MIGRATE_RECLAIMABLE, PAGE_ALLOC_COSTLY_ORDER 3 NR_PCP_THP 0 */ 伙伴系统 每个管理区 zone 都有自己的伙伴系统管理属于这个管理区的页框。在一个管理区中，伙伴系统一共维护着包含1,2,4,8,16,…,512,1024个连续页框的链表。 # define MAX_ORDER 11 struct zone { // 相同大小的连续页框连接形成一个链表 struct free_area free_area [ MAX_ORDER ]; // 11个free_area，分别对应1,2,4,16,...,1024 } struct free_area { struct list_head free_list [ MIGRATE_TYPES ]; unsigned long nr_free; }\
+  \ 伙伴系统中， 相同大小的连续页框连接形成一个链表，在链表的每个节点中，又有以 MIGRATE_TYPES 区分的小链表 ， 其MIGRATE_TYPES为页框类型，基本有如下： MIGRATE_UNMOVABLE： 页框内容不可移动,在内存中位置必须固定，无法移动到其他地方，核心内核分配的大部分页面都属于这一类。 MIGRATE_RECLAIMABLE： 页框内容可回收,不能直接移动，但是可以回收，因为还可以从某些源重建页面，比如映射文件的数据属于这种类别，kswapd会按照一定的规则，周期性的回收这类页面。 MIGRATE_MOVABLE： 页框内容可移动，属于用户空间应用程序的页属于此类页面，它们是通过页表映射的，因此我们只需要更新页表项，并把数据复制到新位置就可以了，当然要注意，一个页面可能被多个进程共享，对应着多个页表项。 MIGRATE_PCPTYPES： 用来表示每CPU页框高速缓存的数据结构中的链表的迁移类型数目。 MIGRATE_CMA： 预留一段的内存给驱动使用，但当驱动不用的时候，伙伴系统可以分配给用户进程用作匿名内存或者页缓存。而当驱动需要使用时，就将进程占用的内存通过回收或者迁移的方式将之前占用的预留内存腾出来，供驱动使用。 MIGRATE_ISOLATE： 不能从这个链表分配页框，因为这个链表专门用于NUMA结点移动物理内存页，将物理内存页内容移动到使用这个页最频繁的CPU。 在分配时，可能会出现某种类型的页面被耗尽不满足要求，因此需要如下对不同类型的页框进行优先级定义 // 当某种类型的空闲页面耗尽不满足需要数目时的优先级列表 static int fallbacks[MIGRATE_TYPES][ 3 ] = { [MIGRATE_UNMOVABLE]   = { MIGRATE_RECLAIMABLE, MIGRATE_MOVABLE,   MIGRATE_TYPES }, [MIGRATE_MOVABLE]     = { MIGRATE_RECLAIMABLE, MIGRATE_UNMOVABLE, MIGRATE_TYPES }, [MIGRATE_RECLAIMABLE] = { MIGRATE_UNMOVABLE,   MIGRATE_MOVABLE,   MIGRATE_TYPES }, # ifdef CONFIG_CMA\
+  \ [MIGRATE_CMA]         = { MIGRATE_TYPES }, /* Never used */ # endif # ifdef CONFIG_MEMORY_ISOLATION [MIGRATE_ISOLATE]     = { MIGRATE_TYPES }, /* Never used */ # endif }; 以MIGRATE_RECLAIMABLE为例，如果我需要申请这种页框，当然会优先从这类页框的链表中获取，如果没有，我会依次尝试从MIGRATE_UNMOVABLE -> MIGRATE_MOVABLE -> MIGRATE_RESERVE链进行分配。 内核物理内存分配 内存分配 struct page *alloc_pages(gfp_t gfp, unsigned int order); #define alloc_page(gfp_mask) alloc_pages(gfp_mask, 0) alloc_pages 函数用于向底层伙伴系统申请 2 的 order 次幂个连续物理内存页组成的内存块，该函数返回值是一个 struct page 类型的指针用于指向申请的内存块中 第一个物理内存页 。返回值是 页的物理内存地址 ， alloc_page 用于分配单个页，其实就是把order指定为0。 unsigned long __get_free_pages( gfp_t gfp_mask, unsigned int order) { struct page * page ; page = alloc_pages(gfp_mask & ~__GFP_HIGHMEM, order); // 不能使用高端内存，因为高端内存不能 直接映射 if (!page) return 0 ; return ( unsigned long ) page_address(page); // page_address对直接映射区的物理内存转换成虚拟内存 } 使用 __get_free_pages 函数的功能和 alloc_pages 一样，只是返回的是 页的虚拟地址 。在其函数内部就是调用的 alloc_pages ,并调用 page_address 把页的物理地址转换成页的虚拟地址。 无论是 alloc_pages 也好还是 `__get_free_pages``\
+  \ 也好，它们申请到的内存页中包含的数据在一开始都不是空白的，而是内核 随机产生的信息 。 内核又提供了一个函数 get_zeroed_page，这个函数会将从伙伴系统中申请到内存页 全部初始化填充为 0 ，这在 分配物理内存页给用户空间使用 的时候非常有用。 unsigned long get_zeroed_page ( gfp_t gfp_mask) { return __get_free_pages(gfp_mask | __GFP_ZERO, 0 ); } 内核还提供了一个 __get_dma_pages 函数，专门用于从 DMA 内存区域分配适用于 DMA 的物理内存页。其底层也是依赖于 __get_free_pages 函数。 # define __get_dma_pages(gfp_mask, order)  __get_free_pages((gfp_mask) | GFP_DMA, (order)) 内存释放 void __free_pages( struct page *page, unsigned int order); // 使用释放区域第一个page的物理地址 void free_pages ( unsigned long addr, unsigned int order) ; // 使用虚拟地址 // 每次释放一个页 # define __free_page(page) __free_pages((page), 0) # define free_page(addr) free_pages((addr), 0) 规范物理内存分配行为的掩码gfp_mask 在进行物理内存分配的时候，需要对分配行为做出很多的设定与规范，使用 gfp_mask 掩码来规范。 以下是对掩码的定义,在 include/linux/gfp.h 中 /* ___GFP_DMA ： 0x01u = 00000001（二进制） ___GFP_HIGHMEM ： 0x02u = 00000010（二进制） ___GFP_DMA32 ： 0x04u = 00000100（二进制） ___GFP_MOVABLE ： 0x08u = 00001000（二进制） */ // 下边四个是限制内核的物理分配区域 # define ___GFP_DMA\t\t0x01u // 可以从DMA区域获得内存\
+  \ # define ___GFP_HIGHMEM\t\t0x02u # define ___GFP_DMA32\t\t0x04u # define ___GFP_MOVABLE\t\t0x08u // 限制分配行为 # define ___GFP_RECLAIMABLE\t0x10u // 分配的页面是可以回收的 # define ___GFP_HIGH 0x20u // 内存分配请求的优先级是最高的，内核迫切需要内存，不允许失败 # define ___GFP_IO\t0x40u //分配时可以发起磁盘IO操作，即可以将不常用的内存也置换到SWAP分区 # define ___GFP_FS\t\t0x80u // 允许内核执行底层文件系统操作 # define ___GFP_ZERO\t\t0x100u //在内核分配内存成功之后，将内存页初始化填充字节 0 # define ___GFP_ATOMIC\t\t0x200u // 不允许睡眠，必须原子性地分配 # define ___GFP_DIRECT_RECLAIM\t0x400u // 内核在进行内存分配的时候，可以进行直接内存回收 /* ___GFP_KSWAPD_RECLAIM表示内核在分配内存的时候，如果剩余内存容量在 _watermark[WMARK_MIN] 与 _watermark[WMARK_LOW] 之间时，内核就会唤醒 kswapd 进程开始异步内存回收 */ # define ___GFP_KSWAPD_RECLAIM\t0x800u # define ___GFP_WRITE\t\t0x1000u # define ___GFP_NOWARN\t\t0x2000u // 分配失败时，抑制内核的分配失败报告 # define ___GFP_RETRY_MAYFAIL\t0x4000u // 内存分配失败时，允许重试 # define ___GFP_NOFAIL\t\t0x8000u // 分配不允许失败，分配失败时一直重试直到成功 # define ___GFP_NORETRY\t\t0x10000u // 内存分配失败时，不允许重试 /* ___GFP_MEMALLOC 允许内核在分配内存时可以从所有内存区域中获取内存，包括从紧急预留内存中获取。但使用该标示时需要保证进程在获得内存之后会很快的释放掉内存不会过长时间的占用，尤其要警惕避免过多的消耗紧急预留内存区域中的内存\
+  \ */ # define ___GFP_MEMALLOC\t\t0x20000u # define ___GFP_COMP\t\t0x40000u # define ___GFP_NOMEMALLOC  0x80000u //禁止从紧急预留内存获得内存,优先级高于___GFP_MEMALLOC /* ___GFP_HARDWALL 限制了内核分配内存的行为只能在当前进程分配到的CPU所关联的NUMA节点上进行分配，如果进程可以在所有的CPU上运行，（那就可以在所有的NUMA节点运行，这个设置就没有意义） */ # define ___GFP_HARDWALL\t\t0x100000u /* ___GFP_THISNODE 限制了内核分配内存的行为，只能在当前 NUMA 节点或者在指定 NUMA 节点中分配内存，如果内存分配失败不允许从其他备用 NUMA 节点中分配内存。 */ # define ___GFP_THISNODE\t\t0x200000u # define ___GFP_ACCOUNT\t\t0x400000u # define ___GFP_ZEROTAGS\t\t0x800000u # define ___GFP_SKIP_KASAN_POISON\t0x1000000u 将这些宏定义的值转为二进制就看到，每一种占一个bit位。使用掩码的时候做位运算即可 没有 zone_normal 是因为默认的分配就是 zone_normal 。 同样在 /include/linux/gfp.h 中定义了 gfp_zone 函数 ，函数返回此次内存分配中的最高的物理内存区域 。较为新的5.14版本中相关代码可读性很差。 在2.6.24版本中， static inline enum zone_type gfp_zone ( gfp_t flags) { int base = 0 ; # ifdef CONFIG_NUMA if (flags & __GFP_THISNODE) base = MAX_NR_ZONES; # endif # ifdef CONFIG_ZONE_DMA if (flags & __GFP_DMA) // flag中设置了__GFP_DMA,就只能在在ZONE_DMA中分配内存 return base + ZONE_DMA; # endif\
+  \ # ifdef CONFIG_ZONE_DMA32 if (flags & __GFP_DMA32) // 同上 return base + ZONE_DMA32; # endif //如果要使用MOVABLE区域，那么在设置flag时，__GFP_HIGHMEM和__GFP_MOVABLE都要设置上 if ((flags & (__GFP_HIGHMEM | __GFP_MOVABLE)) == (__GFP_HIGHMEM | __GFP_MOVABLE)) return base + ZONE_MOVABLE; # ifdef CONFIG_HIGHMEM if (flags & __GFP_HIGHMEM) // 只设置了__GFP_HIGHMEM return base + ZONE_HIGHMEM; # endif // 默认从 normal 区域中分配内存 return base + ZONE_NORMAL; } 内核将一些常用的gfp_t掩码组合提前准备好了 # define GFP_ATOMIC (__GFP_HIGH|__GFP_ATOMIC|__GFP_KSWAPD_RECLAIM) # define GFP_KERNEL (__GFP_RECLAIM | __GFP_IO | __GFP_FS) # define GFP_NOWAIT (__GFP_KSWAPD_RECLAIM) # define GFP_NOIO (__GFP_RECLAIM) # define GFP_NOFS (__GFP_RECLAIM | __GFP_IO) # define GFP_USER (__GFP_RECLAIM | __GFP_IO | __GFP_FS | __GFP_HARDWALL) # define GFP_DMA  __GFP_DMA # define GFP_DMA32 __GFP_DMA32 # define GFP_HIGHUSER (GFP_USER | __GFP_HIGHMEM) GFP_ATOMIC 表示分配行为是原子的，是高优先级的。如果内存空间不够，则会从紧急预留内存中分配。 GFP_KERNEL 设置之后内核的分配内存行为可能会阻塞睡眠，可以允许内核置换出一些不活跃的内存页到磁盘中。 GFP_NOIO 和 GFP_NOFS\
+  \ 分别禁止内核在分配内存时进行磁盘 IO 和 文件系统 IO 操作。 GFP_HIGHUSER 用于给用户空间分配高端内存。因为在用户虚拟空间中，都是通过页表来访问非直接映射的高端内存区域 物理内存分配内核源码实现 内存分配行为标识掩码 在内核文件 /mm/internal.h 中定义了影响内核分配行为的标识 # define ALLOC_WMARK_MIN     WMARK_MIN # define ALLOC_WMARK_LOW     WMARK_LOW # define ALLOC_WMARK_HIGH    WMARK_HIGH # define ALLOC_NO_WATERMARKS 0x04 /* don't check watermarks at all */ # define ALLOC_HARDER         0x10 /* try to alloc harder */ # define ALLOC_HIGH       0x20 /* __GFP_HIGH set */ # define ALLOC_CPUSET         0x40 /* check for correct cpuset */ # define ALLOC_KSWAPD        0x800 /* allow waking of kswapd, __GFP_KSWAPD_RECLAIM set */ ALLOC_NO_WATERMARKS： 表示在内存分配过程中完全不会考虑min、low、high三个水位线的影响。 ALLOC_WMARK_HIGH： 表示在内存分配的时候，当前物理内存区域 zone 中剩余内存页的数量至少要达到 _watermark[WMARK_HIGH] 水位线，才能进行内存的分配。 ALLOC_WMARK_LOW 和 ALLOC_WMARK_MIN 要表达的内存分配语义也是一样，当前物理内存区域 zone 中剩余内存页的数量至少要达到水位线 _watermark[WMARK_LOW]  或者 _watermark[WMARK_MIN]，才能进行内存的分配。 ALLOC_HARDER： 表示在内存分配的时候，会放宽内存分配规则的限制，所谓的放宽规则就是降低 _watermark[WMARK_MIN] 水位线，努力使内存分配最大可能成功。\
+  \ ALLOC_HIGH： 当我们在 gfp_t 掩码中设置了 ___GFP_HIGH 时，ALLOC_HIGH 标识才起作用，该标识表示当前内存分配请求是高优先级的，内核急切的需要内存 ALLOC_CPUSET： 表示内存只能在当前进程所允许运行的 CPU 所关联的 NUMA 节点中进行分配。 ALLOC_KSWAPD： 表示允许唤醒 NUMA 节点中的 KSWAPD 进程，异步进行内存回收。 内存分配的心脏 __alloc_pages 内存分配的任务最终会落在 alloc_pages 这个接口函数中，在 alloc_pages 中会调用 alloc_pages_node 进而调用 alloc_pages_node 函数，最终通过 alloc_pages 函数正式进入内核内存分配。 struct page *__ alloc_pages ( gfp_t gfp , unsigned int order , int preferred_nid , nodemask_t * nodemask ) { struct page * page ; // 内存区域中的剩余内存需要在 WMARK_LOW 水位线之上才能进行内存分配，否则失败（初次尝试快速内存分配） unsigned int alloc_flags = ALLOC_WMARK_LOW; gfp_t alloc_gfp; /* The gfp_t that was actually used for allocation */ // alloc_context用于保存在分配过程中的一些不可变的参数，比如nodemask、页面迁移类型、最高可分配的内存区域，这些 //在分配过程中只用初始化一次（不会变的），而像zonelist、prefer_zone等在初始化之后，可能会在__alloc_pages_slowpath()中改变 struct alloc_context ac = { }; // order只能从0-10,unlikely告诉编译器这个判断不经常发生，用于编译优化 if (unlikely(order >= MAX_ORDER)) { WARN_ON_ONCE(!(gfp & __GFP_NOWARN)); return NULL ; } // 表示在内存分配期间进程可以休眠阻塞 gfp &= gfp_allowed_mask;\
+  \ // 使用函数，设置内存分配时允不允许进行io操作、允不允许进行文件系统的操作、允不允许使用可移动内存 // 并修改gfp中对应的标志位 gfp = current_gfp_context(gfp); alloc_gfp = gfp; // 初始化 alloc_context，并为接下来的快速内存分配设置相关 gfp if (!prepare_alloc_pages(gfp, order, preferred_nid, nodemask, &ac, &alloc_gfp, &alloc_flags)) return NULL ; alloc_flags |= alloc_flags_nofragment(ac.preferred_zoneref->zone, gfp); // 内存分配快速路径：第一次尝试从底层伙伴系统分配内存，注意此时是在 WMARK_LOW 水位线之上分配内存 page = get_page_from_freelist(alloc_gfp, order, alloc_flags, &ac); if (likely(page)) goto out; alloc_gfp = gfp; ac.spread_dirty_pages = false ; ac.nodemask = nodemask; page = __alloc_pages_slowpath(alloc_gfp, order, &ac); out: if (memcg_kmem_enabled() && (gfp & __GFP_ACCOUNT) && page && unlikely(__memcg_kmem_charge_page(page, gfp, order) != 0 )) { __free_pages(page, order); page = NULL ; } trace_mm_page_alloc(page, order, alloc_gfp, ac.migratetype); return page; } EXPORT_SYMBOL(__alloc_pages); 上述代码的整体逻辑如下： 首先尝试在内存水位线VMARK_LOW之上进行一次内存分配，对应 unsigned int alloc_flags = ALLOC_WMARK_LOW 校验本次内存分配指定伙伴系统的分配阶\
+  \ order 的有效性,对应 if (unlikely(order >= MAX_ORDER)) 调用 prepare_alloc_pages 初始化 alloc_context ，用于在不同内存分配辅助函数中传递内存分配参数。为接下来即将进行的快速内存分配做准备。 调用 get_page_from_freelist 方法首次尝试在伙伴系统中进行内存分配 当快速内存分配失败之后，情况就会变得非常复杂，内核将不得不做更多的工作，比如开启 kswapd 进程异步内存回收，更极端的情况则需要进行直接内存回收，或者直接内存整理以获取更多的空闲连续内存。这一切的复杂逻辑全部封装在 __alloc_pages_slowpath 函数中。 整个过程中，有三个重要函数： prepare_alloc_pages 函数用于初始化内存分配策略。 alloc_pages_slowpath 函数在初次快速分配失败后，进行慢速分配 get_page_from_freelist 函数用于在伙伴系统中进行内存分配。 本次博客先介绍前两个函数 prepare_alloc_pages函数 static inline bool prepare_alloc_pages ( gfp_t gfp_mask, unsigned int order, int preferred_nid, nodemask_t *nodemask, struct alloc_context *ac, gfp_t *alloc_gfp, unsigned int *alloc_flags) { // 从gfp_mask中获取内存分配最高优先级的区域zone ac->highest_zoneidx = gfp_zone(gfp_mask); // 从 NUMA 节点的备用节点链表中一次性获取允许进行内存分配的所有内存区域 ac->zonelist = node_zonelist(preferred_nid, gfp_mask); ac->nodemask = nodemask; ac->migratetype = gfp_migratetype(gfp_mask); if (cpusets_enabled()) { *alloc_gfp |= __GFP_HARDWALL; /* * When we are in the interrupt\
+  \ context, it is irrelevant * to the current task context. It means that any node ok. */ if (in_task() && !ac->nodemask) ac->nodemask = &cpuset_current_mems_allowed; else *alloc_flags |= ALLOC_CPUSET; } fs_reclaim_acquire(gfp_mask); fs_reclaim_release(gfp_mask); // 如果设置了允许直接内存回收，那么内存分配进程则可能会导致休眠被重新调度 might_sleep_if(gfp_mask & __GFP_DIRECT_RECLAIM); // 提前判断本次内存分配是否能够成功，如果不能则尽早失败 if (should_fail_alloc_page(gfp_mask, order)) return false ; *alloc_flags = gfp_to_alloc_flags_cma(gfp_mask, *alloc_flags); ac->spread_dirty_pages = (gfp_mask & __GFP_WRITE); ac->preferred_zoneref = first_zones_zonelist(ac->zonelist, ac->highest_zoneidx, ac->nodemask); return true ; } prepare_alloc_pages 主要的任务就是在快速内存分配开始之前，做一些准备初始化的工作，其中最核心的就是从指定 NUMA 节点中，根据  gfp_mask 掩码中的内存区域修饰符获取可以进行内存分配的所有内存区域 zone （包括其他备用 NUMA 节点中包含的内存区域）。 alloc_pages_slowpath函数 alloc_pages_slowpath 函数非常的复杂，其中包含了内存分配的各种异常情况的处理，并且会根据前边介绍的 GFP_ ， ALLOC 等各种内存分配策略掩码进行不同分支的处理，这样就变得非常的庞大而繁杂。 其基本逻辑如下 static inline struct page * __ alloc_pages_slowpath\
+  \ ( gfp_t gfp_mask , unsigned int order , struct alloc_context * ac ) { ......... 初始化慢速内存分配路径下的相关参数 ....... retry_cpuset: ......... 调整内存分配策略 alloc_flags 采用更加激进方式获取内存 ...... ......... 此时内存分配主要是在进程所允许运行的 CPU 相关联的 NUMA 节点上 ...... ......... 内存水位线下调至 WMARK_MIN ........... ......... 唤醒所有 kswapd 进程进行异步内存回收  ........... ......... 触发直接内存整理 direct_compact 来获取更多的连续空闲内存 ...... retry: ......... 进一步调整内存分配策略 alloc_flags 使用更加激进的非常手段进行内存分配 ........... ......... 在内存分配时忽略内存水位线 ........... ......... 触发直接内存回收 direct_reclaim ........... ......... 再次触发直接内存整理 direct_compact ........... ......... 最后的杀手锏触发 OOM 机制  ........... nopage: ......... 经过以上激进的内存分配手段仍然无法满足内存分配就会来到这里 ...... ......... 如果设置了 __GFP_NOFAIL 不允许内存分配失败，则不停重试上述内存分配过程 ...... fail: ......... 内存分配失败，输出告警信息 ........ warn_alloc(gfp_mask, ac->nodemask, \"page allocation failure: order:%u\" , order); got_pg: ......... 内存分配成功，返回新申请的内存块 ........ return page; } 源代码分析 static inline struct page * __ alloc_pages_slowpath ( gfp_t gfp_mask , unsigned int order\
+  \ , struct alloc_context * ac ) { /* 初始化慢速内存分配路径下的相关参数 */ bool can_direct_reclaim = gfp_mask & __GFP_DIRECT_RECLAIM; //order大于3时，即分配8个页面时，认为这个分配是costly的，后续会根据 costly_order决定是否触发 OOM const bool costly_order = order > PAGE_ALLOC_COSTLY_ORDER; struct page * page = NULL ; // 内存分配标识符 unsigned int alloc_flags; /* 当内存严重不足的时候，内核会开启直接内存回收 direct_reclaim， 参数 did_some_progress 表示经过一次直接内存回收之后，内核回收了多少个内存页 */ unsigned long did_some_progress; enum compact_priority compact_priority ; enum compact_result compact_result ; int compaction_retries; // 记录重试的次数，超过16次就内存分配失败 int no_progress_loops; unsigned int cpuset_mems_cookie; unsigned int zonelist_iter_cookie; // 临时保存调整后的内存分配策略 int reserve_flags; /* 当ATOMIC和DIRECT_RECLAIM同时设置时，取消对ATOMIC的设置 因为接下来的直接内存回收非常耗时可能会导致进程阻塞睡眠，不适用原子__GFP_ATOMIC */ if (WARN_ON_ONCE((gfp_mask & (__GFP_ATOMIC|__GFP_DIRECT_RECLAIM)) == (__GFP_ATOMIC|__GFP_DIRECT_RECLAIM))) gfp_mask &= ~__GFP_ATOMIC; restart: compaction_retries = 0 ; no_progress_loops = 0 ; compact_priority = DEF_COMPACT_PRIORITY;\
+  \ cpuset_mems_cookie = read_mems_allowed_begin(); zonelist_iter_cookie = zonelist_iter_begin(); // 在慢速内存分配路径下需要重新设置更加激进的内存分配策略，采用更大的代价来分配内存 alloc_flags = gfp_to_alloc_flags(gfp_mask); // 重新按照新的设置按照内存区域优先级计算 zonelist 的迭代起点（最高优先级的 zone） ac->preferred_zoneref = first_zones_zonelist(ac->zonelist, ac->highest_zoneidx, ac->nodemask); if (!ac->preferred_zoneref->zone) goto nopage; // 唤醒所有的 kswapd 进程异步回收内存 if (alloc_flags & ALLOC_KSWAPD) wake_all_kswapds(order, gfp_mask, ac); // 在对alloc_flags调整后，重新尝试页面分配 page = get_page_from_freelist(gfp_mask, order, alloc_flags, ac); if (page) goto got_pg; /*配大内存来说 costly_order = true (超过 8 个内存页)，需要首先进行内存整理，这样内核可以避免直接内存回收从而获取更多的连续空闲内存页； 对于需要分配不可移动的高阶内存的情况，也需要先进行内存整理，防止永久内存碎片*/ if (can_direct_reclaim && (costly_order || (order > 0 && ac->migratetype != MIGRATE_MOVABLE)) && !gfp_pfmemalloc_allowed(gfp_mask)) { // 进行直接内存整理，获取更多的连续空间内存防止内存碎片 page = __alloc_pages_direct_compact(gfp_mask, order, alloc_flags, ac, INIT_COMPACT_PRIORITY, &compact_result); if (page) goto\
+  \ got_pg; if (costly_order && (gfp_mask & __GFP_NORETRY)) { if (compact_result == COMPACT_SKIPPED || compact_result == COMPACT_DEFERRED) goto nopage; compact_priority = INIT_COMPACT_PRIORITY; } } retry: if (alloc_flags & ALLOC_KSWAPD) // 确保所有 kswapd 进程不要意外进入睡眠状态 wake_all_kswapds(order, gfp_mask, ac); // 忽略掉内存水位线，继续修改 alloc_flags 保存在 reserve_flags 中 reserve_flags = __gfp_pfmemalloc_flags(gfp_mask); if (reserve_flags) alloc_flags = gfp_to_alloc_flags_cma(gfp_mask, reserve_flags); if (!(alloc_flags & ALLOC_CPUSET) || reserve_flags) { ac->nodemask = NULL ; ac->preferred_zoneref = first_zones_zonelist(ac->zonelist, ac->highest_zoneidx, ac->nodemask); } /* Attempt with potentially adjusted zonelist and alloc_flags */ page = get_page_from_freelist(gfp_mask, order, alloc_flags, ac); if (page) goto got_pg; // 判断允不允许直接回收 if (!can_direct_reclaim) goto nopage; // 避免直接回收的递归 if (current->flags & PF_MEMALLOC) goto nopage; // 尝试直接内存回收 page = __alloc_pages_direct_reclaim(gfp_mask, order, alloc_flags, ac,\
+  \ &did_some_progress); if (page) goto got_pg; // 如果还是没有足够的内存可供分配的话，那么内核会再次进行直接内存整理 direct_compact page = __alloc_pages_direct_compact(gfp_mask, order, alloc_flags, ac, compact_priority, &compact_result); if (page) goto got_pg; /* Do not loop if specifically requested */ if (gfp_mask & __GFP_NORETRY) // 内存分配失败时，不允许重试 goto nopage; // 当此次分配超过8个页时，就不会触发OOM，除非没有设置__GFP_RETRY_MAYFAIL if (costly_order && !(gfp_mask & __GFP_RETRY_MAYFAIL)) goto nopage; /* 如果内核已经重试了MAX_RECLAIM_RETRIES(16)次仍然失败，则放弃重试，执行后续OOM 如果内核将所有可选内存区域中的所有可回收页面全部回收之后，仍然无法满足内存分配，那么放弃重试，执行后续OOM */ if (should_reclaim_retry(gfp_mask, order, ac, alloc_flags, did_some_progress > 0 , &no_progress_loops)) goto retry; // 如果经过回收后，did_some_progress = 0,则没有必要进行内存整理的重试了 if (did_some_progress > 0 && should_compact_retry(ac, order, alloc_flags, compact_result, &compact_priority, &compaction_retries)) goto retry; /* * Deal with possible cpuset update races or zonelist updates to avoid * a unnecessary OOM kill. */ if (check_retry_cpuset(cpuset_mems_cookie,\
+  \ ac) || check_retry_zonelist(zonelist_iter_cookie)) goto restart; // 进行 OOM，选择一个得分最高的进程，释放其占用的内存 page = __alloc_pages_may_oom(gfp_mask, order, ac, &did_some_progress); if (page) goto got_pg; /* Avoid allocations with no watermarks from looping endlessly */ if (tsk_is_oom_victim(current) && (alloc_flags & ALLOC_OOM || (gfp_mask & __GFP_NOMEMALLOC))) goto nopage; // 只要 oom 产生了作用并释放了内存 did_some_progress > 0 就不断的进行重试 if (did_some_progress) { no_progress_loops = 0 ; goto retry; } nopage: /* * Deal with possible cpuset update races or zonelist updates to avoid * a unnecessary OOM kill. */ if (check_retry_cpuset(cpuset_mems_cookie, ac) || check_retry_zonelist(zonelist_iter_cookie)) goto restart; /* * Make sure that __GFP_NOFAIL request doesn't leak out and make sure * we always retry */ //流程走到这里表明内核已经尝试了包括 OOM 在内的所有回收内存的动作。 // 但是这些措施依然无法满足内存分配的需求，看上去内存分配到这里就应该失败了。 // 但是如果设置了 __GFP_NOFAIL 表示不允许内存分配失败，那么接下来就会进入 if 分支进行处理 if (gfp_mask & __GFP_NOFAIL) { /* * All existing users of the __GFP_NOFAIL\
+  \ are blockable, so warn * of any new users that actually require GFP_NOWAIT */ if (WARN_ON_ONCE(!can_direct_reclaim)) goto fail; /* * PF_MEMALLOC request from this context is rather bizarre * because we cannot reclaim anything and only can loop waiting * for somebody to do a work for us */ WARN_ON_ONCE(current->flags & PF_MEMALLOC); /* * non failing costly orders are a hard requirement which we * are not prepared for much so let's warn about these users * so that we can identify them and convert them to something * else. */ WARN_ON_ONCE(order > PAGE_ALLOC_COSTLY_ORDER); /* * Help non-failing allocations by giving them access to memory * reserves but do not use ALLOC_NO_WATERMARKS because this * could deplete whole memory reserves which would just make * the situation worse */ // 尝试进行跨NUMA节点的内存分配 page = __alloc_pages_cpuset_fallback(gfp_mask, order, ALLOC_HARDER, ac); if (page) goto got_pg; /* 在进行内存分配重试流程之前，使用cond_resched()让 CPU 重新调度到其他进程上 运行一会其他进程，因为毕竟此时内存已经严重不足 立马重试的话只能浪费过多时间在搜索空闲内存上，导致其他进程处于饥饿状态。\
+  \ */ cond_resched(); goto retry; } fail: warn_alloc(gfp_mask, ac->nodemask, \"page allocation failure: order:%u\" , order); got_pg: return page; } static inline bool prepare_alloc_pages ( gfp_t gfp_mask, unsigned int order, int preferred_nid, nodemask_t *nodemask, struct alloc_context *ac, gfp_t *alloc_gfp, unsigned int *alloc_flags) { // 从gfp_mask中获取内存分配最高优先级的区域zone ac->highest_zoneidx = gfp_zone(gfp_mask); // 从 NUMA 节点的备用节点链表中一次性获取允许进行内存分配的所有内存区域 ac->zonelist = node_zonelist(preferred_nid, gfp_mask); ac->nodemask = nodemask; ac->migratetype = gfp_migratetype(gfp_mask); if (cpusets_enabled()) { *alloc_gfp |= __GFP_HARDWALL; /* * When we are in the interrupt context, it is irrelevant * to the current task context. It means that any node ok. */ if (in_task() && !ac->nodemask) ac->nodemask = &cpuset_current_mems_allowed; else *alloc_flags |= ALLOC_CPUSET; } fs_reclaim_acquire(gfp_mask); fs_reclaim_release(gfp_mask); // 如果设置了允许直接内存回收，那么内存分配进程则可能会导致休眠被重新调度 might_sleep_if(gfp_mask & __GFP_DIRECT_RECLAIM);\
+  \ // 提前判断本次内存分配是否能够成功，如果不能则尽早失败 if (should_fail_alloc_page(gfp_mask, order)) return false ; *alloc_flags = gfp_to_alloc_flags_cma(gfp_mask, *alloc_flags); /* Dirty zone balancing only done in the fast path */ ac->spread_dirty_pages = (gfp_mask & __GFP_WRITE); /* * The preferred zone is used for statistics but crucially it is * also used as the starting point for the zonelist iterator. It * may get reset for allocations that ignore memory policies. */ ac->preferred_zoneref = first_zones_zonelist(ac->zonelist, ac->highest_zoneidx, ac->nodemask); return true ; } 其中相关的几个函数： gfp_to_alloc_flags 函数更改分配策略 static inline unsigned int gfp_to_alloc_flags ( gfp_t gfp_mask) { unsigned int alloc_flags = ALLOC_WMARK_MIN | ALLOC_CPUSET; /* * __GFP_HIGH is assumed to be the same as ALLOC_HIGH * and __GFP_KSWAPD_RECLAIM is assumed to be the same as ALLOC_KSWAPD * to save two branches. */ BUILD_BUG_ON(__GFP_HIGH != (__force gfp_t ) ALLOC_HIGH); BUILD_BUG_ON(__GFP_KSWAPD_RECLAIM != (__force gfp_t ) ALLOC_KSWAPD);\
+  \ /* * The caller may dip into page reserves a bit more if the caller * cannot run direct reclaim, or if the caller has realtime scheduling * policy or is asking for __GFP_HIGH memory.  GFP_ATOMIC requests will * set both ALLOC_HARDER (__GFP_ATOMIC) and ALLOC_HIGH (__GFP_HIGH). */ alloc_flags |= (__force int ) (gfp_mask & (__GFP_HIGH | __GFP_KSWAPD_RECLAIM)); // 如果内存分配是原子的话，则在内存不够的时候，可以从紧急预留内存中分配 if (gfp_mask & __GFP_ATOMIC) { /* __GFP_NOMEMALLOC表示禁止从紧急预留的内存中分配，优先级比__GFP_MEMALLOC高， 因此这里是与__GFP_NOMEMALLOC做与操作 */ if (!(gfp_mask & __GFP_NOMEMALLOC)) alloc_flags |= ALLOC_HARDER; //后续根据 ALLOC_HARDER 标识会降低 WMARK_LOW 水位线 // 这种情况下为了内存分配的成功，会去除掉 CPUSET 的限制，可以在所有 NUMA 节点上分配内存 alloc_flags &= ~ALLOC_CPUSET; } // 如果当前进程是实时任务（可能不太可能发生的情况），并且在任务的上下文中,设置header else if (unlikely(rt_task(current)) && in_task()) alloc_flags |= ALLOC_HARDER; alloc_flags = gfp_to_alloc_flags_cma(gfp_mask, alloc_flags); return alloc_flags; } __gfp_pfmemalloc_flags 函数 static inline int __gfp_pfmemalloc_flags( gfp_t gfp_mask)\
+  \ { // 如果不允许从紧急预留内存中分配，就不改变alloc_flag if (unlikely(gfp_mask & __GFP_NOMEMALLOC)) return 0 ; // 如果允许从紧急预留内存中分配，则后面的内存分配会忽略内存水位线的限制 if (gfp_mask & __GFP_MEMALLOC) return ALLOC_NO_WATERMARKS; // 当前进程处于软中断上下文并且进程设置了 PF_MEMALLOC 标识 if (in_serving_softirq() && (current->flags & PF_MEMALLOC)) return ALLOC_NO_WATERMARKS; // 当前进程不在任何中断上下文中 if (!in_interrupt()) { if (current->flags & PF_MEMALLOC) return ALLOC_NO_WATERMARKS; else if (oom_reserves_allowed(current)) // 当前进程允许进行 OOM return ALLOC_OOM; } return 0 ; } 内存分配流程图："
+migrated_from: Hexo
+---
+{% raw %}
+<p>首先，还是给出参考文献：<a href="https://mp.weixin.qq.com/s?__biz=Mzg2MzU3Mjc3Ng==&amp;mid=2247487111&amp;idx=1&amp;sn=e57371f9c3e6910f4f4721aa0787e537&amp;chksm=ce77c8c0f90041d67b2d344d413a2573f3662a1a64a802b41d4618982fcbff1617d9a5da9f7b&amp;scene=178&amp;cur_album_id=2559805446807928833&amp;poc_token=HH42jmWjzYC8XLG-QvRoCInlL45ANFw7eWIJAKJo" rel="noopener noreferrer" target="_blank">参考博客</a></p>
+<h2 id="每CPU页框高速缓存">每CPU页框高速缓存</h2><p>因为内存经常请求单个页框，因此为了提升性能，在伙伴系统之外又定义了一个per-CPU高速缓存</p>
+<pre class="highlight"><code class="language-c"><span class="class"><span class="keyword">struct</span> <span class="title">zone</span>{</span>
+    <span class="comment">// 实现每CPU页框的高速缓存。里面包含每个CPU的单页框的链表</span>
+	<span class="class"><span class="keyword">struct</span> <span class="title">per_cpu_pages</span>	__<span class="title">percpu</span> *<span class="title">per_cpu_pageset</span>;</span>
+}</code></pre>
+<pre class="highlight"><code class="language-c"><span class="class"><span class="keyword">struct</span> <span class="title">per_cpu_pages</span> {</span>
+	<span class="type">int</span> count;		
+	<span class="type">int</span> high;		
+	<span class="comment">// 当需要增加或者减少高速缓存页框时，操作的页框个数</span>
+	<span class="type">int</span> batch;		
+	<span class="comment">// 空闲期间的批量释放因子</span>
+	<span class="type">short</span> free_factor;	
+<span class="meta">#<span class="keyword">ifdef</span> CONFIG_NUMA</span>
+	<span class="type">short</span> expire;		<span class="comment">/* When 0, remote pagesets are drained */</span>
+<span class="meta">#<span class="keyword">endif</span></span>
+
+	<span class="comment">// 每种迁移类型为一个链表</span>
+	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">lists</span>[<span class="title">NR_PCP_LISTS</span>];</span>
+};</code></pre>
+<p>其中的<code>NR_PCP_LISTS</code>被定义为</p>
+<pre class="highlight"><code class="language-c"><span class="meta">#<span class="keyword">define</span> NR_PCP_LISTS (MIGRATE_PCPTYPES * (PAGE_ALLOC_COSTLY_ORDER + 1 + NR_PCP_THP))</span>
+<span class="comment">/*</span>
+<span class="comment">MIGRATE_PCPTYPES为页面迁移类型，包括MIGRATE_UNMOVABLE,MIGRATE_MOVABLE,MIGRATE_RECLAIMABLE,</span>
+<span class="comment">PAGE_ALLOC_COSTLY_ORDER 3</span>
+<span class="comment">NR_PCP_THP 0</span>
+<span class="comment">*/</span></code></pre>
+<h2 id="伙伴系统">伙伴系统</h2><p><img alt="640" decoding="async" loading="lazy" src="/assets/images/posts/202312311546874.png"/></p>
+<p>每个管理区<code>zone</code>都有自己的伙伴系统管理属于这个管理区的页框。在一个管理区中，伙伴系统一共维护着包含1,2,4,8,16,…,512,1024个连续页框的链表。</p>
+<pre class="highlight"><code class="language-c"><span class="meta">#<span class="keyword">define</span> MAX_ORDER 11</span>
+<span class="class"><span class="keyword">struct</span> <span class="title">zone</span>{</span>
+    <span class="comment">// 相同大小的连续页框连接形成一个链表</span>
+	<span class="class"><span class="keyword">struct</span> <span class="title">free_area</span> <span class="title">free_area</span>[<span class="title">MAX_ORDER</span>];</span> <span class="comment">// 11个free_area，分别对应1,2,4,16,...,1024</span>
+}
+
+<span class="class"><span class="keyword">struct</span> <span class="title">free_area</span> {</span>
+	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>	<span class="title">free_list</span>[<span class="title">MIGRATE_TYPES</span>];</span>
+	<span class="type">unsigned</span> <span class="type">long</span>		nr_free;
+}</code></pre>
+<p>伙伴系统中，<strong>相同大小的连续页框连接形成一个链表，在链表的每个节点中，又有以<code>MIGRATE_TYPES</code>区分的小链表</strong>，</p>
+<p><img alt="image-20231229111822073" decoding="async" loading="lazy" src="/assets/images/posts/202312291118186.png"/></p>
+<p>其MIGRATE_TYPES为页框类型，基本有如下：</p>
+<ul>
+<li><strong>MIGRATE_UNMOVABLE：</strong>页框内容不可移动,在内存中位置必须固定，无法移动到其他地方，核心内核分配的大部分页面都属于这一类。</li>
+<li><strong>MIGRATE_RECLAIMABLE：</strong>页框内容可回收,不能直接移动，但是可以回收，因为还可以从某些源重建页面，比如映射文件的数据属于这种类别，kswapd会按照一定的规则，周期性的回收这类页面。</li>
+<li><strong>MIGRATE_MOVABLE：</strong>页框内容可移动，属于用户空间应用程序的页属于此类页面，它们是通过页表映射的，因此我们只需要更新页表项，并把数据复制到新位置就可以了，当然要注意，一个页面可能被多个进程共享，对应着多个页表项。</li>
+<li><strong>MIGRATE_PCPTYPES：</strong>用来表示每CPU页框高速缓存的数据结构中的链表的迁移类型数目。</li>
+<li><strong>MIGRATE_CMA：</strong> 预留一段的内存给驱动使用，但当驱动不用的时候，伙伴系统可以分配给用户进程用作匿名内存或者页缓存。而当驱动需要使用时，就将进程占用的内存通过回收或者迁移的方式将之前占用的预留内存腾出来，供驱动使用。</li>
+<li><strong>MIGRATE_ISOLATE：</strong>不能从这个链表分配页框，因为这个链表专门用于NUMA结点移动物理内存页，将物理内存页内容移动到使用这个页最频繁的CPU。</li>
+</ul>
+<p>在分配时，可能会出现某种类型的页面被耗尽不满足要求，因此需要如下对不同类型的页框进行优先级定义</p>
+<pre class="highlight"><code class="language-c"><span class="comment">// 当某种类型的空闲页面耗尽不满足需要数目时的优先级列表</span>
+<span class="type">static</span> <span class="type">int</span> fallbacks[MIGRATE_TYPES][<span class="number">3</span>] = {
+	[MIGRATE_UNMOVABLE]   = { MIGRATE_RECLAIMABLE, MIGRATE_MOVABLE,   MIGRATE_TYPES },
+	[MIGRATE_MOVABLE]     = { MIGRATE_RECLAIMABLE, MIGRATE_UNMOVABLE, MIGRATE_TYPES },
+	[MIGRATE_RECLAIMABLE] = { MIGRATE_UNMOVABLE,   MIGRATE_MOVABLE,   MIGRATE_TYPES },
+<span class="meta">#<span class="keyword">ifdef</span> CONFIG_CMA</span>
+	[MIGRATE_CMA]         = { MIGRATE_TYPES }, <span class="comment">/* Never used */</span>
+<span class="meta">#<span class="keyword">endif</span></span>
+<span class="meta">#<span class="keyword">ifdef</span> CONFIG_MEMORY_ISOLATION</span>
+	[MIGRATE_ISOLATE]     = { MIGRATE_TYPES }, <span class="comment">/* Never used */</span>
+<span class="meta">#<span class="keyword">endif</span></span>
+};</code></pre>
+<p>以MIGRATE_RECLAIMABLE为例，如果我需要申请这种页框，当然会优先从这类页框的链表中获取，如果没有，我会依次尝试从MIGRATE_UNMOVABLE -&gt; MIGRATE_MOVABLE -&gt; MIGRATE_RESERVE链进行分配。</p>
+<h2 id="内核物理内存分配">内核物理内存分配</h2><h3 id="内存分配">内存分配</h3><pre class="highlight"><code class="language-plaintext">struct page *alloc_pages(gfp_t gfp, unsigned int order);
+#define alloc_page(gfp_mask) alloc_pages(gfp_mask, 0)</code></pre>
+<p><code>alloc_pages</code> 函数用于向底层伙伴系统申请 2 的 order 次幂个连续物理内存页组成的内存块，该函数返回值是一个 struct page 类型的指针用于指向申请的内存块中<strong>第一个物理内存页</strong>。返回值是<strong>页的物理内存地址</strong>，<code>alloc_page</code>用于分配单个页，其实就是把order指定为0。</p>
+<pre class="highlight"><code class="language-c"><span class="type">unsigned</span> <span class="type">long</span> __get_free_pages(<span class="type">gfp_t</span> gfp_mask, <span class="type">unsigned</span> <span class="type">int</span> order)
+{
+	<span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span>;</span>
+
+	page = alloc_pages(gfp_mask &amp; ~__GFP_HIGHMEM, order); <span class="comment">// 不能使用高端内存，因为高端内存不能 直接映射</span>
+	<span class="keyword">if</span> (!page)
+		<span class="keyword">return</span> <span class="number">0</span>;
+	<span class="keyword">return</span> (<span class="type">unsigned</span> <span class="type">long</span>) page_address(page); <span class="comment">// page_address对直接映射区的物理内存转换成虚拟内存</span>
+}</code></pre>
+<p>使用<code>__get_free_pages</code>函数的功能和<code>alloc_pages</code>一样，只是返回的是<strong>页的虚拟地址</strong>。在其函数内部就是调用的<code>alloc_pages</code>,并调用<code>page_address</code>把页的物理地址转换成页的虚拟地址。</p>
+<p>无论是 <code>alloc_pages</code> 也好还是 `__get_free_pages`` 也好，它们申请到的内存页中包含的数据在一开始都不是空白的，而是内核<strong>随机产生的信息</strong>。</p>
+<p>内核又提供了一个函数 get_zeroed_page，这个函数会将从伙伴系统中申请到内存页<strong>全部初始化填充为 0</strong> ，这在<strong>分配物理内存页给用户空间使用</strong>的时候非常有用。</p>
+<pre class="highlight"><code class="language-c"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">get_zeroed_page</span><span class="params">(<span class="type">gfp_t</span> gfp_mask)</span>
+{
+	<span class="keyword">return</span> __get_free_pages(gfp_mask | __GFP_ZERO, <span class="number">0</span>);
+}</code></pre>
+<p>内核还提供了一个 __get_dma_pages 函数，专门用于从 DMA 内存区域分配适用于 DMA 的物理内存页。其底层也是依赖于 __get_free_pages 函数。</p>
+<pre class="highlight"><code class="language-c"><span class="meta">#<span class="keyword">define</span> __get_dma_pages(gfp_mask, order)  __get_free_pages((gfp_mask) | GFP_DMA, (order))</span></code></pre>
+<h3 id="内存释放">内存释放</h3><pre class="highlight"><code class="language-c"><span class="type">void</span> __free_pages(<span class="keyword">struct</span> page *page, <span class="type">unsigned</span> <span class="type">int</span> order); <span class="comment">// 使用释放区域第一个page的物理地址</span>
+<span class="type">void</span> <span class="title function_">free_pages</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr, <span class="type">unsigned</span> <span class="type">int</span> order)</span>; <span class="comment">// 使用虚拟地址</span>
+
+<span class="comment">// 每次释放一个页</span>
+<span class="meta">#<span class="keyword">define</span> __free_page(page) __free_pages((page), 0)</span>
+<span class="meta">#<span class="keyword">define</span> free_page(addr) free_pages((addr), 0)</span></code></pre>
+<h2 id="规范物理内存分配行为的掩码gfp-mask">规范物理内存分配行为的掩码gfp_mask</h2><p>在进行物理内存分配的时候，需要对分配行为做出很多的设定与规范，使用<code>gfp_mask</code>掩码来规范。</p>
+<p>以下是对掩码的定义,在<code>include/linux/gfp.h</code>中</p>
+<pre class="highlight"><code class="language-c"><span class="comment">/*</span>
+<span class="comment">___GFP_DMA ： 0x01u = 00000001（二进制）</span>
+<span class="comment">___GFP_HIGHMEM ： 0x02u = 00000010（二进制）</span>
+<span class="comment">___GFP_DMA32 ： 0x04u = 00000100（二进制）</span>
+<span class="comment">___GFP_MOVABLE ： 0x08u = 00001000（二进制）</span>
+<span class="comment">*/</span>
+<span class="comment">// 下边四个是限制内核的物理分配区域</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_DMA		0x01u   <span class="comment">// 可以从DMA区域获得内存</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_HIGHMEM		0x02u</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_DMA32		0x04u</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_MOVABLE		0x08u</span>
+
+<span class="comment">// 限制分配行为</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_RECLAIMABLE	0x10u    <span class="comment">// 分配的页面是可以回收的</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_HIGH 0x20u  <span class="comment">// 内存分配请求的优先级是最高的，内核迫切需要内存，不允许失败</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_IO	0x40u  <span class="comment">//分配时可以发起磁盘IO操作，即可以将不常用的内存也置换到SWAP分区</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_FS		0x80u <span class="comment">// 允许内核执行底层文件系统操作</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_ZERO		0x100u <span class="comment">//在内核分配内存成功之后，将内存页初始化填充字节 0 </span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_ATOMIC		0x200u <span class="comment">// 不允许睡眠，必须原子性地分配</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_DIRECT_RECLAIM	0x400u <span class="comment">// 内核在进行内存分配的时候，可以进行直接内存回收</span></span>
+<span class="comment">/*</span>
+<span class="comment">___GFP_KSWAPD_RECLAIM表示内核在分配内存的时候，如果剩余内存容量在 _watermark[WMARK_MIN] 与 _watermark[WMARK_LOW] 之间时，内核就会唤醒 kswapd 进程开始异步内存回收</span>
+<span class="comment">*/</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_KSWAPD_RECLAIM	0x800u</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_WRITE		0x1000u</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_NOWARN		0x2000u <span class="comment">// 分配失败时，抑制内核的分配失败报告</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_RETRY_MAYFAIL	0x4000u <span class="comment">// 内存分配失败时，允许重试</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_NOFAIL		0x8000u  <span class="comment">// 分配不允许失败，分配失败时一直重试直到成功</span></span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_NORETRY		0x10000u  <span class="comment">// 内存分配失败时，不允许重试</span></span>
+<span class="comment">/*</span>
+<span class="comment">___GFP_MEMALLOC 允许内核在分配内存时可以从所有内存区域中获取内存，包括从紧急预留内存中获取。但使用该标示时需要保证进程在获得内存之后会很快的释放掉内存不会过长时间的占用，尤其要警惕避免过多的消耗紧急预留内存区域中的内存</span>
+<span class="comment">*/</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_MEMALLOC		0x20000u </span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_COMP		0x40000u</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_NOMEMALLOC  0x80000u <span class="comment">//禁止从紧急预留内存获得内存,优先级高于___GFP_MEMALLOC</span></span>
+<span class="comment">/*</span>
+<span class="comment"> ___GFP_HARDWALL 限制了内核分配内存的行为只能在当前进程分配到的CPU所关联的NUMA节点上进行分配，如果进程可以在所有的CPU上运行，（那就可以在所有的NUMA节点运行，这个设置就没有意义）</span>
+<span class="comment">*/</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_HARDWALL		0x100000u</span>
+<span class="comment">/*</span>
+<span class="comment">___GFP_THISNODE 限制了内核分配内存的行为，只能在当前 NUMA 节点或者在指定 NUMA 节点中分配内存，如果内存分配失败不允许从其他备用 NUMA 节点中分配内存。</span>
+<span class="comment">*/</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_THISNODE		0x200000u</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_ACCOUNT		0x400000u</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_ZEROTAGS		0x800000u</span>
+<span class="meta">#<span class="keyword">define</span> ___GFP_SKIP_KASAN_POISON	0x1000000u</span></code></pre>
+<p>将这些宏定义的值转为二进制就看到，每一种占一个bit位。使用掩码的时候做位运算即可</p>
+<p><strong>没有<code>zone_normal</code>是因为默认的分配就是<code>zone_normal</code>。</strong></p>
+<p>同样在<code>/include/linux/gfp.h</code>中定义了<code>gfp_zone</code>函数<strong>，函数返回此次内存分配中的最高的物理内存区域</strong>。较为新的5.14版本中相关代码可读性很差。</p>
+<p>在2.6.24版本中，</p>
+<pre class="highlight"><code class="language-c"><span class="type">static</span> <span class="keyword">inline</span> <span class="keyword">enum</span> zone_type <span class="title function_">gfp_zone</span><span class="params">(<span class="type">gfp_t</span> flags)</span>
+{
+	<span class="type">int</span> base = <span class="number">0</span>;
+
+<span class="meta">#<span class="keyword">ifdef</span> CONFIG_NUMA</span>
+	<span class="keyword">if</span> (flags &amp; __GFP_THISNODE)
+ 	base = MAX_NR_ZONES;
+<span class="meta">#<span class="keyword">endif</span></span>
+  
+<span class="meta">#<span class="keyword">ifdef</span> CONFIG_ZONE_DMA</span>
+	<span class="keyword">if</span> (flags &amp; __GFP_DMA)   <span class="comment">// flag中设置了__GFP_DMA,就只能在在ZONE_DMA中分配内存</span>
+	<span class="keyword">return</span> base + ZONE_DMA;
+<span class="meta">#<span class="keyword">endif</span></span>
+    
+<span class="meta">#<span class="keyword">ifdef</span> CONFIG_ZONE_DMA32</span>
+	<span class="keyword">if</span> (flags &amp; __GFP_DMA32) <span class="comment">// 同上</span>
+	<span class="keyword">return</span> base + ZONE_DMA32;
+<span class="meta">#<span class="keyword">endif</span></span>
+    
+    <span class="comment">//如果要使用MOVABLE区域，那么在设置flag时，__GFP_HIGHMEM和__GFP_MOVABLE都要设置上</span>
+	<span class="keyword">if</span> ((flags &amp; (__GFP_HIGHMEM | __GFP_MOVABLE)) ==
+	(__GFP_HIGHMEM | __GFP_MOVABLE)) 
+		<span class="keyword">return</span> base + ZONE_MOVABLE;
+    
+<span class="meta">#<span class="keyword">ifdef</span> CONFIG_HIGHMEM</span>
+	<span class="keyword">if</span> (flags &amp; __GFP_HIGHMEM) <span class="comment">// 只设置了__GFP_HIGHMEM</span>
+	<span class="keyword">return</span> base + ZONE_HIGHMEM;
+<span class="meta">#<span class="keyword">endif</span></span>
+
+ <span class="comment">// 默认从 normal 区域中分配内存</span>
+ <span class="keyword">return</span> base + ZONE_NORMAL;
+}</code></pre>
+<p>内核将一些常用的gfp_t掩码组合提前准备好了</p>
+<pre class="highlight"><code class="language-c"><span class="meta">#<span class="keyword">define</span> GFP_ATOMIC (__GFP_HIGH|__GFP_ATOMIC|__GFP_KSWAPD_RECLAIM)</span>
+<span class="meta">#<span class="keyword">define</span> GFP_KERNEL (__GFP_RECLAIM | __GFP_IO | __GFP_FS)</span>
+<span class="meta">#<span class="keyword">define</span> GFP_NOWAIT (__GFP_KSWAPD_RECLAIM)</span>
+<span class="meta">#<span class="keyword">define</span> GFP_NOIO (__GFP_RECLAIM)</span>
+<span class="meta">#<span class="keyword">define</span> GFP_NOFS (__GFP_RECLAIM | __GFP_IO)</span>
+<span class="meta">#<span class="keyword">define</span> GFP_USER (__GFP_RECLAIM | __GFP_IO | __GFP_FS | __GFP_HARDWALL)</span>
+<span class="meta">#<span class="keyword">define</span> GFP_DMA  __GFP_DMA</span>
+<span class="meta">#<span class="keyword">define</span> GFP_DMA32 __GFP_DMA32</span>
+<span class="meta">#<span class="keyword">define</span> GFP_HIGHUSER (GFP_USER | __GFP_HIGHMEM)</span></code></pre>
+<ul>
+<li><code>GFP_ATOMIC</code>表示分配行为是原子的，是高优先级的。如果内存空间不够，则会从紧急预留内存中分配。</li>
+<li><code>GFP_KERNEL</code>设置之后内核的分配内存行为可能会阻塞睡眠，可以允许内核置换出一些不活跃的内存页到磁盘中。</li>
+<li><code>GFP_NOIO</code> 和 <code>GFP_NOFS</code> 分别禁止内核在分配内存时进行磁盘 IO 和 文件系统 IO 操作。</li>
+<li><code>GFP_HIGHUSER</code> 用于给用户空间分配高端内存。因为在用户虚拟空间中，都是通过页表来访问非直接映射的高端内存区域</li>
+</ul>
+<h2 id="物理内存分配内核源码实现">物理内存分配内核源码实现</h2><h3 id="内存分配行为标识掩码">内存分配行为标识掩码</h3><p>在内核文件 <code>/mm/internal.h</code> 中定义了影响内核分配行为的标识</p>
+<pre class="highlight"><code class="language-c"><span class="meta">#<span class="keyword">define</span> ALLOC_WMARK_MIN     WMARK_MIN</span>
+<span class="meta">#<span class="keyword">define</span> ALLOC_WMARK_LOW     WMARK_LOW</span>
+<span class="meta">#<span class="keyword">define</span> ALLOC_WMARK_HIGH    WMARK_HIGH</span>
+<span class="meta">#<span class="keyword">define</span> ALLOC_NO_WATERMARKS 0x04 <span class="comment">/* don't check watermarks at all */</span></span>
+
+<span class="meta">#<span class="keyword">define</span> ALLOC_HARDER         0x10 <span class="comment">/* try to alloc harder */</span></span>
+<span class="meta">#<span class="keyword">define</span> ALLOC_HIGH       0x20 <span class="comment">/* __GFP_HIGH set */</span></span>
+<span class="meta">#<span class="keyword">define</span> ALLOC_CPUSET         0x40 <span class="comment">/* check for correct cpuset */</span></span>
+
+<span class="meta">#<span class="keyword">define</span> ALLOC_KSWAPD        0x800 <span class="comment">/* allow waking of kswapd, __GFP_KSWAPD_RECLAIM set */</span></span></code></pre>
+<ul>
+<li><strong>ALLOC_NO_WATERMARKS：</strong> 表示在内存分配过程中完全不会考虑min、low、high三个水位线的影响。</li>
+<li><strong>ALLOC_WMARK_HIGH：</strong> 表示在内存分配的时候，当前物理内存区域 zone 中剩余内存页的数量至少要达到 _watermark[WMARK_HIGH] 水位线，才能进行内存的分配。</li>
+<li>ALLOC_WMARK_LOW 和 ALLOC_WMARK_MIN 要表达的内存分配语义也是一样，当前物理内存区域 zone 中剩余内存页的数量至少要达到水位线 _watermark[WMARK_LOW]  或者 _watermark[WMARK_MIN]，才能进行内存的分配。</li>
+<li><strong>ALLOC_HARDER：</strong> 表示在内存分配的时候，会放宽内存分配规则的限制，所谓的放宽规则就是降低 _watermark[WMARK_MIN] 水位线，努力使内存分配最大可能成功。</li>
+<li><strong>ALLOC_HIGH：</strong>当我们在 gfp_t 掩码中设置了 ___GFP_HIGH 时，ALLOC_HIGH 标识才起作用，该标识表示当前内存分配请求是高优先级的，内核急切的需要内存</li>
+<li><strong>ALLOC_CPUSET：</strong> 表示内存只能在当前进程所允许运行的 CPU 所关联的 NUMA 节点中进行分配。</li>
+<li><strong>ALLOC_KSWAPD：</strong> 表示允许唤醒 NUMA 节点中的 KSWAPD 进程，异步进行内存回收。</li>
+</ul>
+<h3 id="内存分配的心脏-alloc-pages">内存分配的心脏 __alloc_pages</h3><p><img alt="图片" decoding="async" loading="lazy" src="/assets/images/posts/202312311647985.png"/></p>
+<p>内存分配的任务最终会落在 <code>alloc_pages</code> 这个接口函数中，在 <code>alloc_pages</code> 中会调用 <code>alloc_pages_node</code> 进而调用 alloc_pages_node 函数，最终通过 <code>alloc_pages</code> 函数正式进入内核内存分配。</p>
+<pre class="highlight"><code class="language-c"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> *__<span class="title">alloc_pages</span>(<span class="title">gfp_t</span> <span class="title">gfp</span>, <span class="title">unsigned</span> <span class="title">int</span> <span class="title">order</span>, <span class="title">int</span> <span class="title">preferred_nid</span>,</span>
+<span class="class">							<span class="title">nodemask_t</span> *<span class="title">nodemask</span>)</span>
+<span class="class">{</span>
+	<span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span>;</span>
+	<span class="comment">// 内存区域中的剩余内存需要在 WMARK_LOW 水位线之上才能进行内存分配，否则失败（初次尝试快速内存分配）</span>
+	<span class="type">unsigned</span> <span class="type">int</span> alloc_flags = ALLOC_WMARK_LOW;
+	<span class="type">gfp_t</span> alloc_gfp; <span class="comment">/* The gfp_t that was actually used for allocation */</span>
+	<span class="comment">// alloc_context用于保存在分配过程中的一些不可变的参数，比如nodemask、页面迁移类型、最高可分配的内存区域，这些</span>
+	<span class="comment">//在分配过程中只用初始化一次（不会变的），而像zonelist、prefer_zone等在初始化之后，可能会在__alloc_pages_slowpath()中改变</span>
+	<span class="class"><span class="keyword">struct</span> <span class="title">alloc_context</span> <span class="title">ac</span> =</span> { };
+
+	<span class="comment">// order只能从0-10,unlikely告诉编译器这个判断不经常发生，用于编译优化</span>
+	<span class="keyword">if</span> (unlikely(order &gt;= MAX_ORDER)) { 
+		WARN_ON_ONCE(!(gfp &amp; __GFP_NOWARN));
+		<span class="keyword">return</span> <span class="literal">NULL</span>;
+	}
+	<span class="comment">// 表示在内存分配期间进程可以休眠阻塞</span>
+	gfp &amp;= gfp_allowed_mask;
+	<span class="comment">// 使用函数，设置内存分配时允不允许进行io操作、允不允许进行文件系统的操作、允不允许使用可移动内存</span>
+	<span class="comment">// 并修改gfp中对应的标志位</span>
+	gfp = current_gfp_context(gfp);
+	alloc_gfp = gfp;
+	<span class="comment">// 初始化 alloc_context，并为接下来的快速内存分配设置相关 gfp</span>
+	<span class="keyword">if</span> (!prepare_alloc_pages(gfp, order, preferred_nid, nodemask, &amp;ac,
+			&amp;alloc_gfp, &amp;alloc_flags))
+		<span class="keyword">return</span> <span class="literal">NULL</span>;
+    
+	alloc_flags |= alloc_flags_nofragment(ac.preferred_zoneref-&gt;zone, gfp);
+
+	<span class="comment">// 内存分配快速路径：第一次尝试从底层伙伴系统分配内存，注意此时是在 WMARK_LOW 水位线之上分配内存</span>
+	page = get_page_from_freelist(alloc_gfp, order, alloc_flags, &amp;ac);
+	<span class="keyword">if</span> (likely(page))
+		<span class="keyword">goto</span> out;
+
+	alloc_gfp = gfp;
+	ac.spread_dirty_pages = <span class="literal">false</span>;
+
+	ac.nodemask = nodemask;
+
+	page = __alloc_pages_slowpath(alloc_gfp, order, &amp;ac);
+
+out:
+	<span class="keyword">if</span> (memcg_kmem_enabled() &amp;&amp; (gfp &amp; __GFP_ACCOUNT) &amp;&amp; page &amp;&amp;
+	    unlikely(__memcg_kmem_charge_page(page, gfp, order) != <span class="number">0</span>)) {
+		__free_pages(page, order);
+		page = <span class="literal">NULL</span>;
+	}
+
+	trace_mm_page_alloc(page, order, alloc_gfp, ac.migratetype);
+
+	<span class="keyword">return</span> page;
+}
+EXPORT_SYMBOL(__alloc_pages);</code></pre>
+<p>上述代码的整体逻辑如下：</p>
+<ul>
+<li><p>首先尝试在内存水位线VMARK_LOW之上进行一次内存分配，对应<code>unsigned int alloc_flags = ALLOC_WMARK_LOW</code></p>
+</li>
+<li><p>校验本次内存分配指定伙伴系统的分配阶 order 的有效性,对应<code>if (unlikely(order &gt;= MAX_ORDER))</code></p>
+</li>
+<li><p>调用 prepare_alloc_pages 初始化 alloc_context ，用于在不同内存分配辅助函数中传递内存分配参数。为接下来即将进行的快速内存分配做准备。</p>
+</li>
+<li><p>调用 get_page_from_freelist 方法首次尝试在伙伴系统中进行内存分配</p>
+</li>
+<li><p>当快速内存分配失败之后，情况就会变得非常复杂，内核将不得不做更多的工作，比如开启 kswapd 进程异步内存回收，更极端的情况则需要进行直接内存回收，或者直接内存整理以获取更多的空闲连续内存。这一切的复杂逻辑全部封装在 __alloc_pages_slowpath 函数中。</p>
+</li>
+</ul>
+<p>整个过程中，有三个重要函数：</p>
+<p><code>prepare_alloc_pages</code>函数用于初始化内存分配策略。</p>
+<p><code>alloc_pages_slowpath</code>函数在初次快速分配失败后，进行慢速分配</p>
+<p><code>get_page_from_freelist</code>函数用于在伙伴系统中进行内存分配。</p>
+<p>本次博客先介绍前两个函数</p>
+<h3 id="prepare-alloc-pages函数">prepare_alloc_pages函数</h3><pre class="highlight"><code class="language-c"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">bool</span> <span class="title function_">prepare_alloc_pages</span><span class="params">(<span class="type">gfp_t</span> gfp_mask, <span class="type">unsigned</span> <span class="type">int</span> order,</span>
+<span class="params">		<span class="type">int</span> preferred_nid, <span class="type">nodemask_t</span> *nodemask,</span>
+<span class="params">		<span class="keyword">struct</span> alloc_context *ac, <span class="type">gfp_t</span> *alloc_gfp,</span>
+<span class="params">		<span class="type">unsigned</span> <span class="type">int</span> *alloc_flags)</span>
+{
+	<span class="comment">// 从gfp_mask中获取内存分配最高优先级的区域zone</span>
+	ac-&gt;highest_zoneidx = gfp_zone(gfp_mask);  
+	<span class="comment">// 从 NUMA 节点的备用节点链表中一次性获取允许进行内存分配的所有内存区域</span>
+	ac-&gt;zonelist = node_zonelist(preferred_nid, gfp_mask);
+	ac-&gt;nodemask = nodemask;
+	ac-&gt;migratetype = gfp_migratetype(gfp_mask);
+
+	<span class="keyword">if</span> (cpusets_enabled()) {
+		*alloc_gfp |= __GFP_HARDWALL;
+		<span class="comment">/*</span>
+<span class="comment">		 * When we are in the interrupt context, it is irrelevant</span>
+<span class="comment">		 * to the current task context. It means that any node ok.</span>
+<span class="comment">		 */</span>
+		<span class="keyword">if</span> (in_task() &amp;&amp; !ac-&gt;nodemask)
+			ac-&gt;nodemask = &amp;cpuset_current_mems_allowed;
+		<span class="keyword">else</span>
+			*alloc_flags |= ALLOC_CPUSET;
+	}
+
+	fs_reclaim_acquire(gfp_mask);
+	fs_reclaim_release(gfp_mask);
+	<span class="comment">// 如果设置了允许直接内存回收，那么内存分配进程则可能会导致休眠被重新调度 </span>
+	might_sleep_if(gfp_mask &amp; __GFP_DIRECT_RECLAIM);
+	<span class="comment">// 提前判断本次内存分配是否能够成功，如果不能则尽早失败</span>
+	<span class="keyword">if</span> (should_fail_alloc_page(gfp_mask, order))
+		<span class="keyword">return</span> <span class="literal">false</span>;
+
+	*alloc_flags = gfp_to_alloc_flags_cma(gfp_mask, *alloc_flags);
+
+	ac-&gt;spread_dirty_pages = (gfp_mask &amp; __GFP_WRITE);
+
+	ac-&gt;preferred_zoneref = first_zones_zonelist(ac-&gt;zonelist,
+					ac-&gt;highest_zoneidx, ac-&gt;nodemask);
+
+	<span class="keyword">return</span> <span class="literal">true</span>;
+}</code></pre>
+<p>prepare_alloc_pages 主要的任务就是在快速内存分配开始之前，做一些准备初始化的工作，其中最核心的就是从指定 NUMA 节点中，根据  gfp_mask 掩码中的内存区域修饰符获取可以进行内存分配的所有内存区域 zone （包括其他备用 NUMA 节点中包含的内存区域）。</p>
+<h3 id="alloc-pages-slowpath函数">alloc_pages_slowpath函数</h3><p><code>alloc_pages_slowpath</code> 函数非常的复杂，其中包含了内存分配的各种异常情况的处理，并且会根据前边介绍的 <code>GFP_</code>，<code>ALLOC</code> 等各种内存分配策略掩码进行不同分支的处理，这样就变得非常的庞大而繁杂。</p>
+<p>其基本逻辑如下</p>
+<pre class="highlight"><code class="language-c"><span class="type">static</span> <span class="keyword">inline</span> <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *</span>
+<span class="class">__<span class="title">alloc_pages_slowpath</span>(<span class="title">gfp_t</span> <span class="title">gfp_mask</span>, <span class="title">unsigned</span> <span class="title">int</span> <span class="title">order</span>,</span>
+<span class="class">                        <span class="keyword">struct</span> <span class="title">alloc_context</span> *<span class="title">ac</span>)</span>
+<span class="class">{</span>
+        ......... 初始化慢速内存分配路径下的相关参数 .......
+
+retry_cpuset:
+
+        ......... 调整内存分配策略 alloc_flags 采用更加激进方式获取内存 ......
+        ......... 此时内存分配主要是在进程所允许运行的 CPU 相关联的 NUMA 节点上 ......
+        ......... 内存水位线下调至 WMARK_MIN ...........
+        ......... 唤醒所有 kswapd 进程进行异步内存回收  ...........
+        ......... 触发直接内存整理 direct_compact 来获取更多的连续空闲内存 ......
+
+retry:
+
+        ......... 进一步调整内存分配策略 alloc_flags 使用更加激进的非常手段进行内存分配 ...........
+        ......... 在内存分配时忽略内存水位线 ...........
+        ......... 触发直接内存回收 direct_reclaim ...........
+        ......... 再次触发直接内存整理 direct_compact ...........
+        ......... 最后的杀手锏触发 OOM 机制  ...........
+
+nopage:
+        ......... 经过以上激进的内存分配手段仍然无法满足内存分配就会来到这里 ......
+        ......... 如果设置了 __GFP_NOFAIL 不允许内存分配失败，则不停重试上述内存分配过程 ......
+
+fail:
+        ......... 内存分配失败，输出告警信息 ........
+
+      warn_alloc(gfp_mask, ac-&gt;nodemask,
+            <span class="string">"page allocation failure: order:%u"</span>, order);
+got_pg:
+        ......... 内存分配成功，返回新申请的内存块 ........
+
+      <span class="keyword">return</span> page;
+}</code></pre>
+<p>源代码分析</p>
+<pre class="highlight"><code class="language-c"><span class="type">static</span> <span class="keyword">inline</span> <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *</span>
+<span class="class">__<span class="title">alloc_pages_slowpath</span>(<span class="title">gfp_t</span> <span class="title">gfp_mask</span>, <span class="title">unsigned</span> <span class="title">int</span> <span class="title">order</span>,</span>
+<span class="class">						<span class="keyword">struct</span> <span class="title">alloc_context</span> *<span class="title">ac</span>)</span>
+<span class="class">{</span>
+	<span class="comment">/*</span>
+<span class="comment">	初始化慢速内存分配路径下的相关参数</span>
+<span class="comment">	*/</span>
+	<span class="type">bool</span> can_direct_reclaim = gfp_mask &amp; __GFP_DIRECT_RECLAIM;
+	<span class="comment">//order大于3时，即分配8个页面时，认为这个分配是costly的，后续会根据 costly_order决定是否触发 OOM </span>
+	<span class="type">const</span> <span class="type">bool</span> costly_order = order &gt; PAGE_ALLOC_COSTLY_ORDER;
+	<span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span> =</span> <span class="literal">NULL</span>;
+    <span class="comment">// 内存分配标识符</span>
+	<span class="type">unsigned</span> <span class="type">int</span> alloc_flags;
+	<span class="comment">/* </span>
+<span class="comment">	当内存严重不足的时候，内核会开启直接内存回收 direct_reclaim，</span>
+<span class="comment">	参数 did_some_progress 表示经过一次直接内存回收之后，内核回收了多少个内存页</span>
+<span class="comment">	*/</span>
+	<span class="type">unsigned</span> <span class="type">long</span> did_some_progress;
+	<span class="class"><span class="keyword">enum</span> <span class="title">compact_priority</span> <span class="title">compact_priority</span>;</span>
+	<span class="class"><span class="keyword">enum</span> <span class="title">compact_result</span> <span class="title">compact_result</span>;</span>
+	<span class="type">int</span> compaction_retries;
+    <span class="comment">// 记录重试的次数，超过16次就内存分配失败</span>
+	<span class="type">int</span> no_progress_loops;
+	<span class="type">unsigned</span> <span class="type">int</span> cpuset_mems_cookie;
+	<span class="type">unsigned</span> <span class="type">int</span> zonelist_iter_cookie;
+    <span class="comment">// 临时保存调整后的内存分配策略</span>
+	<span class="type">int</span> reserve_flags;
+    <span class="comment">/* 当ATOMIC和DIRECT_RECLAIM同时设置时，取消对ATOMIC的设置</span>
+<span class="comment">    因为接下来的直接内存回收非常耗时可能会导致进程阻塞睡眠，不适用原子__GFP_ATOMIC</span>
+<span class="comment">    */</span>
+	<span class="keyword">if</span> (WARN_ON_ONCE((gfp_mask &amp; (__GFP_ATOMIC|__GFP_DIRECT_RECLAIM)) ==
+				(__GFP_ATOMIC|__GFP_DIRECT_RECLAIM)))
+		gfp_mask &amp;= ~__GFP_ATOMIC;
+
+restart:
+	compaction_retries = <span class="number">0</span>;
+	no_progress_loops = <span class="number">0</span>;
+	compact_priority = DEF_COMPACT_PRIORITY;
+	cpuset_mems_cookie = read_mems_allowed_begin();
+	zonelist_iter_cookie = zonelist_iter_begin();
+	<span class="comment">// 在慢速内存分配路径下需要重新设置更加激进的内存分配策略，采用更大的代价来分配内存</span>
+	alloc_flags = gfp_to_alloc_flags(gfp_mask);
+	<span class="comment">// 重新按照新的设置按照内存区域优先级计算 zonelist 的迭代起点（最高优先级的 zone）</span>
+	ac-&gt;preferred_zoneref = first_zones_zonelist(ac-&gt;zonelist,
+					ac-&gt;highest_zoneidx, ac-&gt;nodemask);
+	<span class="keyword">if</span> (!ac-&gt;preferred_zoneref-&gt;zone)
+		<span class="keyword">goto</span> nopage;
+	<span class="comment">// 唤醒所有的 kswapd 进程异步回收内存</span>
+	<span class="keyword">if</span> (alloc_flags &amp; ALLOC_KSWAPD) 
+		wake_all_kswapds(order, gfp_mask, ac);
+	<span class="comment">// 在对alloc_flags调整后，重新尝试页面分配</span>
+	page = get_page_from_freelist(gfp_mask, order, alloc_flags, ac);
+	<span class="keyword">if</span> (page)
+		<span class="keyword">goto</span> got_pg;
+
+	<span class="comment">/*配大内存来说 costly_order = true (超过 8 个内存页)，需要首先进行内存整理，这样内核可以避免直接内存回收从而获取更多的连续空闲内存页；</span>
+<span class="comment">    对于需要分配不可移动的高阶内存的情况，也需要先进行内存整理，防止永久内存碎片*/</span>
+	<span class="keyword">if</span> (can_direct_reclaim &amp;&amp;
+			(costly_order ||
+			   (order &gt; <span class="number">0</span> &amp;&amp; ac-&gt;migratetype != MIGRATE_MOVABLE))
+			&amp;&amp; !gfp_pfmemalloc_allowed(gfp_mask)) {
+        <span class="comment">// 进行直接内存整理，获取更多的连续空间内存防止内存碎片</span>
+		page = __alloc_pages_direct_compact(gfp_mask, order,
+						alloc_flags, ac,
+						INIT_COMPACT_PRIORITY,
+						&amp;compact_result);
+		<span class="keyword">if</span> (page)
+			<span class="keyword">goto</span> got_pg;
+
+		<span class="keyword">if</span> (costly_order &amp;&amp; (gfp_mask &amp; __GFP_NORETRY)) {
+		
+			<span class="keyword">if</span> (compact_result == COMPACT_SKIPPED ||
+			    compact_result == COMPACT_DEFERRED)
+				<span class="keyword">goto</span> nopage;
+			compact_priority = INIT_COMPACT_PRIORITY;
+		}
+	}
+
+retry:
+	<span class="keyword">if</span> (alloc_flags &amp; ALLOC_KSWAPD)  <span class="comment">// 确保所有 kswapd 进程不要意外进入睡眠状态</span>
+		wake_all_kswapds(order, gfp_mask, ac);
+	<span class="comment">// 忽略掉内存水位线，继续修改 alloc_flags 保存在 reserve_flags 中</span>
+	reserve_flags = __gfp_pfmemalloc_flags(gfp_mask);
+	<span class="keyword">if</span> (reserve_flags)
+		alloc_flags = gfp_to_alloc_flags_cma(gfp_mask, reserve_flags);
+
+	
+	<span class="keyword">if</span> (!(alloc_flags &amp; ALLOC_CPUSET) || reserve_flags) {
+		ac-&gt;nodemask = <span class="literal">NULL</span>;
+		ac-&gt;preferred_zoneref = first_zones_zonelist(ac-&gt;zonelist,
+					ac-&gt;highest_zoneidx, ac-&gt;nodemask);
+	}
+
+	<span class="comment">/* Attempt with potentially adjusted zonelist and alloc_flags */</span>
+	page = get_page_from_freelist(gfp_mask, order, alloc_flags, ac);
+	<span class="keyword">if</span> (page)
+		<span class="keyword">goto</span> got_pg;
+
+	<span class="comment">// 判断允不允许直接回收</span>
+	<span class="keyword">if</span> (!can_direct_reclaim)
+		<span class="keyword">goto</span> nopage;
+
+	<span class="comment">// 避免直接回收的递归</span>
+	<span class="keyword">if</span> (current-&gt;flags &amp; PF_MEMALLOC)
+		<span class="keyword">goto</span> nopage;
+
+	<span class="comment">// 尝试直接内存回收</span>
+	page = __alloc_pages_direct_reclaim(gfp_mask, order, alloc_flags, ac,
+							&amp;did_some_progress);
+	<span class="keyword">if</span> (page)
+		<span class="keyword">goto</span> got_pg;
+
+	<span class="comment">// 如果还是没有足够的内存可供分配的话，那么内核会再次进行直接内存整理 direct_compact</span>
+	page = __alloc_pages_direct_compact(gfp_mask, order, alloc_flags, ac,
+					compact_priority, &amp;compact_result);
+	<span class="keyword">if</span> (page)
+		<span class="keyword">goto</span> got_pg;
+
+	<span class="comment">/* Do not loop if specifically requested */</span>
+	<span class="keyword">if</span> (gfp_mask &amp; __GFP_NORETRY) <span class="comment">// 内存分配失败时，不允许重试</span>
+		<span class="keyword">goto</span> nopage;
+    
+	<span class="comment">// 当此次分配超过8个页时，就不会触发OOM，除非没有设置__GFP_RETRY_MAYFAIL</span>
+	<span class="keyword">if</span> (costly_order &amp;&amp; !(gfp_mask &amp; __GFP_RETRY_MAYFAIL))
+		<span class="keyword">goto</span> nopage;
+	<span class="comment">/*</span>
+<span class="comment">	如果内核已经重试了MAX_RECLAIM_RETRIES(16)次仍然失败，则放弃重试，执行后续OOM</span>
+<span class="comment">	如果内核将所有可选内存区域中的所有可回收页面全部回收之后，仍然无法满足内存分配，那么放弃重试，执行后续OOM</span>
+<span class="comment">	*/</span>
+	<span class="keyword">if</span> (should_reclaim_retry(gfp_mask, order, ac, alloc_flags,
+				 did_some_progress &gt; <span class="number">0</span>, &amp;no_progress_loops))
+		<span class="keyword">goto</span> retry;
+
+	<span class="comment">// 如果经过回收后，did_some_progress = 0,则没有必要进行内存整理的重试了</span>
+	<span class="keyword">if</span> (did_some_progress &gt; <span class="number">0</span> &amp;&amp;
+			should_compact_retry(ac, order, alloc_flags,
+				compact_result, &amp;compact_priority,
+				&amp;compaction_retries))
+		<span class="keyword">goto</span> retry;
+
+
+	<span class="comment">/*</span>
+<span class="comment">	 * Deal with possible cpuset update races or zonelist updates to avoid</span>
+<span class="comment">	 * a unnecessary OOM kill.</span>
+<span class="comment">	 */</span>
+	<span class="keyword">if</span> (check_retry_cpuset(cpuset_mems_cookie, ac) ||
+	    check_retry_zonelist(zonelist_iter_cookie))
+		<span class="keyword">goto</span> restart;
+
+	<span class="comment">// 进行 OOM，选择一个得分最高的进程，释放其占用的内存 </span>
+	page = __alloc_pages_may_oom(gfp_mask, order, ac, &amp;did_some_progress);
+	<span class="keyword">if</span> (page)
+		<span class="keyword">goto</span> got_pg;
+
+	<span class="comment">/* Avoid allocations with no watermarks from looping endlessly */</span>
+	<span class="keyword">if</span> (tsk_is_oom_victim(current) &amp;&amp;
+	    (alloc_flags &amp; ALLOC_OOM ||
+	     (gfp_mask &amp; __GFP_NOMEMALLOC)))
+		<span class="keyword">goto</span> nopage;
+
+	<span class="comment">// 只要 oom 产生了作用并释放了内存 did_some_progress &gt; 0 就不断的进行重试</span>
+	<span class="keyword">if</span> (did_some_progress) {
+		no_progress_loops = <span class="number">0</span>;
+		<span class="keyword">goto</span> retry;
+	}
+
+nopage:
+	<span class="comment">/*</span>
+<span class="comment">	 * Deal with possible cpuset update races or zonelist updates to avoid</span>
+<span class="comment">	 * a unnecessary OOM kill.</span>
+<span class="comment">	 */</span>
+	
+	<span class="keyword">if</span> (check_retry_cpuset(cpuset_mems_cookie, ac) ||
+	    check_retry_zonelist(zonelist_iter_cookie))
+		<span class="keyword">goto</span> restart;
+
+	<span class="comment">/*</span>
+<span class="comment">	 * Make sure that __GFP_NOFAIL request doesn't leak out and make sure</span>
+<span class="comment">	 * we always retry</span>
+<span class="comment">	 */</span>
+	<span class="comment">//流程走到这里表明内核已经尝试了包括 OOM 在内的所有回收内存的动作。</span>
+	<span class="comment">// 但是这些措施依然无法满足内存分配的需求，看上去内存分配到这里就应该失败了。</span>
+	<span class="comment">// 但是如果设置了 __GFP_NOFAIL 表示不允许内存分配失败，那么接下来就会进入 if 分支进行处理</span>
+	<span class="keyword">if</span> (gfp_mask &amp; __GFP_NOFAIL) {
+		<span class="comment">/*</span>
+<span class="comment">		 * All existing users of the __GFP_NOFAIL are blockable, so warn</span>
+<span class="comment">		 * of any new users that actually require GFP_NOWAIT</span>
+<span class="comment">		 */</span>
+		<span class="keyword">if</span> (WARN_ON_ONCE(!can_direct_reclaim))
+			<span class="keyword">goto</span> fail;
+
+		<span class="comment">/*</span>
+<span class="comment">		 * PF_MEMALLOC request from this context is rather bizarre</span>
+<span class="comment">		 * because we cannot reclaim anything and only can loop waiting</span>
+<span class="comment">		 * for somebody to do a work for us</span>
+<span class="comment">		 */</span>
+		WARN_ON_ONCE(current-&gt;flags &amp; PF_MEMALLOC);
+
+		<span class="comment">/*</span>
+<span class="comment">		 * non failing costly orders are a hard requirement which we</span>
+<span class="comment">		 * are not prepared for much so let's warn about these users</span>
+<span class="comment">		 * so that we can identify them and convert them to something</span>
+<span class="comment">		 * else.</span>
+<span class="comment">		 */</span>
+		WARN_ON_ONCE(order &gt; PAGE_ALLOC_COSTLY_ORDER);
+
+		<span class="comment">/*</span>
+<span class="comment">		 * Help non-failing allocations by giving them access to memory</span>
+<span class="comment">		 * reserves but do not use ALLOC_NO_WATERMARKS because this</span>
+<span class="comment">		 * could deplete whole memory reserves which would just make</span>
+<span class="comment">		 * the situation worse</span>
+<span class="comment">		 */</span>
+		<span class="comment">// 尝试进行跨NUMA节点的内存分配</span>
+		page = __alloc_pages_cpuset_fallback(gfp_mask, order, ALLOC_HARDER, ac);
+		<span class="keyword">if</span> (page)
+			<span class="keyword">goto</span> got_pg;
+ 		<span class="comment">/* </span>
+<span class="comment">		在进行内存分配重试流程之前，使用cond_resched()让 CPU 重新调度到其他进程上</span>
+<span class="comment">        运行一会其他进程，因为毕竟此时内存已经严重不足</span>
+<span class="comment">        立马重试的话只能浪费过多时间在搜索空闲内存上，导致其他进程处于饥饿状态。</span>
+<span class="comment">		*/</span>
+		cond_resched();
+		<span class="keyword">goto</span> retry;
+	}
+fail:
+	warn_alloc(gfp_mask, ac-&gt;nodemask,
+			<span class="string">"page allocation failure: order:%u"</span>, order);
+got_pg:
+	<span class="keyword">return</span> page;
+}
+
+<span class="type">static</span> <span class="keyword">inline</span> <span class="type">bool</span> <span class="title function_">prepare_alloc_pages</span><span class="params">(<span class="type">gfp_t</span> gfp_mask, <span class="type">unsigned</span> <span class="type">int</span> order,</span>
+<span class="params">		<span class="type">int</span> preferred_nid, <span class="type">nodemask_t</span> *nodemask,</span>
+<span class="params">		<span class="keyword">struct</span> alloc_context *ac, <span class="type">gfp_t</span> *alloc_gfp,</span>
+<span class="params">		<span class="type">unsigned</span> <span class="type">int</span> *alloc_flags)</span>
+{
+	<span class="comment">// 从gfp_mask中获取内存分配最高优先级的区域zone</span>
+	ac-&gt;highest_zoneidx = gfp_zone(gfp_mask);  
+	<span class="comment">// 从 NUMA 节点的备用节点链表中一次性获取允许进行内存分配的所有内存区域</span>
+	ac-&gt;zonelist = node_zonelist(preferred_nid, gfp_mask);
+	ac-&gt;nodemask = nodemask;
+	ac-&gt;migratetype = gfp_migratetype(gfp_mask);
+
+	<span class="keyword">if</span> (cpusets_enabled()) {
+		*alloc_gfp |= __GFP_HARDWALL;
+		<span class="comment">/*</span>
+<span class="comment">		 * When we are in the interrupt context, it is irrelevant</span>
+<span class="comment">		 * to the current task context. It means that any node ok.</span>
+<span class="comment">		 */</span>
+		<span class="keyword">if</span> (in_task() &amp;&amp; !ac-&gt;nodemask)
+			ac-&gt;nodemask = &amp;cpuset_current_mems_allowed;
+		<span class="keyword">else</span>
+			*alloc_flags |= ALLOC_CPUSET;
+	}
+
+	fs_reclaim_acquire(gfp_mask);
+	fs_reclaim_release(gfp_mask);
+	<span class="comment">// 如果设置了允许直接内存回收，那么内存分配进程则可能会导致休眠被重新调度 </span>
+	might_sleep_if(gfp_mask &amp; __GFP_DIRECT_RECLAIM);
+	<span class="comment">// 提前判断本次内存分配是否能够成功，如果不能则尽早失败</span>
+	<span class="keyword">if</span> (should_fail_alloc_page(gfp_mask, order))
+		<span class="keyword">return</span> <span class="literal">false</span>;
+
+	*alloc_flags = gfp_to_alloc_flags_cma(gfp_mask, *alloc_flags);
+
+	<span class="comment">/* Dirty zone balancing only done in the fast path */</span>
+	ac-&gt;spread_dirty_pages = (gfp_mask &amp; __GFP_WRITE);
+
+	<span class="comment">/*</span>
+<span class="comment">	 * The preferred zone is used for statistics but crucially it is</span>
+<span class="comment">	 * also used as the starting point for the zonelist iterator. It</span>
+<span class="comment">	 * may get reset for allocations that ignore memory policies.</span>
+<span class="comment">	 */</span>
+	ac-&gt;preferred_zoneref = first_zones_zonelist(ac-&gt;zonelist,
+					ac-&gt;highest_zoneidx, ac-&gt;nodemask);
+
+	<span class="keyword">return</span> <span class="literal">true</span>;
+}</code></pre>
+<p>其中相关的几个函数：</p>
+<p><strong><code>gfp_to_alloc_flags</code>函数更改分配策略</strong></p>
+<pre class="highlight"><code class="language-c"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">unsigned</span> <span class="type">int</span>
+<span class="title function_">gfp_to_alloc_flags</span><span class="params">(<span class="type">gfp_t</span> gfp_mask)</span>
+{
+	<span class="type">unsigned</span> <span class="type">int</span> alloc_flags = ALLOC_WMARK_MIN | ALLOC_CPUSET;
+
+	<span class="comment">/*</span>
+<span class="comment">	 * __GFP_HIGH is assumed to be the same as ALLOC_HIGH</span>
+<span class="comment">	 * and __GFP_KSWAPD_RECLAIM is assumed to be the same as ALLOC_KSWAPD</span>
+<span class="comment">	 * to save two branches.</span>
+<span class="comment">	 */</span>
+	BUILD_BUG_ON(__GFP_HIGH != (__force <span class="type">gfp_t</span>) ALLOC_HIGH);
+	BUILD_BUG_ON(__GFP_KSWAPD_RECLAIM != (__force <span class="type">gfp_t</span>) ALLOC_KSWAPD);
+
+	<span class="comment">/*</span>
+<span class="comment">	 * The caller may dip into page reserves a bit more if the caller</span>
+<span class="comment">	 * cannot run direct reclaim, or if the caller has realtime scheduling</span>
+<span class="comment">	 * policy or is asking for __GFP_HIGH memory.  GFP_ATOMIC requests will</span>
+<span class="comment">	 * set both ALLOC_HARDER (__GFP_ATOMIC) and ALLOC_HIGH (__GFP_HIGH).</span>
+<span class="comment">	 */</span>
+	alloc_flags |= (__force <span class="type">int</span>)
+		(gfp_mask &amp; (__GFP_HIGH | __GFP_KSWAPD_RECLAIM));
+
+	<span class="comment">// 如果内存分配是原子的话，则在内存不够的时候，可以从紧急预留内存中分配</span>
+	<span class="keyword">if</span> (gfp_mask &amp; __GFP_ATOMIC) {
+		
+		<span class="comment">/* </span>
+<span class="comment">		__GFP_NOMEMALLOC表示禁止从紧急预留的内存中分配，优先级比__GFP_MEMALLOC高，</span>
+<span class="comment">		 因此这里是与__GFP_NOMEMALLOC做与操作</span>
+<span class="comment">		*/</span>
+		<span class="keyword">if</span> (!(gfp_mask &amp; __GFP_NOMEMALLOC))
+			alloc_flags |= ALLOC_HARDER; <span class="comment">//后续根据 ALLOC_HARDER 标识会降低 WMARK_LOW 水位线</span>
+		 <span class="comment">// 这种情况下为了内存分配的成功，会去除掉 CPUSET 的限制，可以在所有 NUMA 节点上分配内存</span>
+		alloc_flags &amp;= ~ALLOC_CPUSET;
+	} 
+	<span class="comment">// 如果当前进程是实时任务（可能不太可能发生的情况），并且在任务的上下文中,设置header</span>
+	<span class="keyword">else</span> <span class="keyword">if</span> (unlikely(rt_task(current)) &amp;&amp; in_task())
+		alloc_flags |= ALLOC_HARDER;
+
+	alloc_flags = gfp_to_alloc_flags_cma(gfp_mask, alloc_flags);
+
+	<span class="keyword">return</span> alloc_flags;
+}</code></pre>
+<p><strong><code>__gfp_pfmemalloc_flags</code>函数</strong></p>
+<pre class="highlight"><code class="language-c"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> __gfp_pfmemalloc_flags(<span class="type">gfp_t</span> gfp_mask)
+{
+	<span class="comment">// 如果不允许从紧急预留内存中分配，就不改变alloc_flag</span>
+	<span class="keyword">if</span> (unlikely(gfp_mask &amp; __GFP_NOMEMALLOC)) 
+		<span class="keyword">return</span> <span class="number">0</span>;
+	<span class="comment">// 如果允许从紧急预留内存中分配，则后面的内存分配会忽略内存水位线的限制</span>
+	<span class="keyword">if</span> (gfp_mask &amp; __GFP_MEMALLOC)
+		<span class="keyword">return</span> ALLOC_NO_WATERMARKS;
+	<span class="comment">// 当前进程处于软中断上下文并且进程设置了 PF_MEMALLOC 标识</span>
+	<span class="keyword">if</span> (in_serving_softirq() &amp;&amp; (current-&gt;flags &amp; PF_MEMALLOC))
+		<span class="keyword">return</span> ALLOC_NO_WATERMARKS;
+	<span class="comment">// 当前进程不在任何中断上下文中</span>
+	<span class="keyword">if</span> (!in_interrupt()) {
+		<span class="keyword">if</span> (current-&gt;flags &amp; PF_MEMALLOC)
+			<span class="keyword">return</span> ALLOC_NO_WATERMARKS;
+		<span class="keyword">else</span> <span class="keyword">if</span> (oom_reserves_allowed(current)) <span class="comment">// 当前进程允许进行 OOM</span>
+			<span class="keyword">return</span> ALLOC_OOM;
+	}
+
+	<span class="keyword">return</span> <span class="number">0</span>;
+}</code></pre>
+<p>内存分配流程图：</p>
+<p><img alt="640 (2)" decoding="async" loading="lazy" src="/assets/images/posts/202312311639085.png"/></p>
+
+{% endraw %}

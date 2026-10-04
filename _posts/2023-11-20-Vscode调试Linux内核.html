@@ -1,0 +1,116 @@
+---
+layout: post
+title: Vscode调试Linux内核
+date: '2023-11-20T05:29:07.000Z'
+last_modified_at: '2024-07-24T05:20:12.478Z'
+permalink: /2023/11/20/Vscode调试Linux内核/
+categories:
+- Linux内核
+tags: []
+description: 上一篇博客我们在虚拟机中编译了Linux内核，并且使用Qemu和gdb进行调试，但是gdb的指令我还不熟练，还是想用vscode来调试，这样也更加方便
+reading_time: 2
+toc:
+- text: 使用Vscode调试Linux内核
+  id: 使用Vscode调试Linux内核
+  level: 1
+- text: Vscode插件安装
+  id: Vscode插件安装
+  level: 2
+- text: remote-ssh
+  id: remote-ssh
+  level: 3
+- text: C/C++
+  id: C-C
+  level: 3
+- text: Vscode调试
+  id: Vscode调试
+  level: 2
+- text: 在虚拟机中启动qemu
+  id: 在虚拟机中启动qemu
+  level: 3
+- text: 打断点
+  id: 打断点
+  level: 3
+- text: 调试
+  id: 调试
+  level: 3
+- text: 代码中标红的问题
+  id: 代码中标红的问题
+  level: 2
+search_text: '使用Vscode调试Linux内核 上一篇博客我们在虚拟机中编译了Linux内核，并且使用Qemu和gdb进行调试，但是gdb的指令我还不熟练，还是想用vscode来调试，这样也更加方便 Vscode插件安装 remote-ssh 安装完成后右边工具栏会多出一个功能 按F1呼出对话框，输入 remote-ssh ，选择open ssh configuration file。 选择第一个配置文件 Host 自定义连接名称 HostName 服务器IP地址 User 用户名 C/C++ 安装C/C++插件 依次点击【运行】->【打开配置】，将以下配置复制到launch.json中。 该代码不需要更改，直接粘贴 { // 使用 IntelliSense 了解相关属性。 // 悬停以查看现有属性的描述。 // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387 "version" : "0.2.0" , "configurations" : [ { "name" : "kernel-debug" , //随便起名 "type" : "cppdbg" , "request" : "launch" , "miDebuggerServerAddress" : "127.0.0.1:1234" , //远端调试地址，1234为qemu的监视端口 "program" : "${workspaceFolder}/vmlinux" , //当前目录下的vmlinux "args" : [ ] , "stopAtEntry" : false , "cwd" : "${workspaceFolder}" , "environment" : [ ] , "externalConsole" : false , "logging" : { "engineLogging" : false } , "MIMode" : "gdb" , } ] } Vscode调试 在虚拟机中启动qemu 在 Linux内核文件夹下 运行此命令 qemu-system-x86_64 -kernel ./arch/x86/boot/bzImage -initrd ../initramfs.cpio.gz -append "nokaslr
+  console=ttyS0" -s -S -nographic 打断点 打开init/main.c，我打了如下的断点 调试 然后在vscode中就可以看到调试结果了 代码中标红的问题 代码标红是缺少compile_commands.json文件 我在B站上学习的时候，是跟着这位up主来的（源码被猫吃了），他的解决方案如下： 在终端键入命令 ./scripts/clang-tools/gen_compile_commands.py 在源码目录下就生成了 compile_commands.json 文件 在vscode中： ctrl+shipt+p 选择C/C++：Edit Coonfigurations, 在c_cpp_properties.json { "configurations" : [ { "name" : "Linux" , "includePath" : [ "${workspaceFolder}/**" ] , "defines" : [ ] , "compilerPath" : "/usr/bin/gcc" , "cStandard" : "c17" , "cppStandard" : "gnu++17" , "intelliSenseMode" : "linux-gcc-x64" , "compileCommands" : "${workspaceFolder}/compile_commands.json" } ] , "version" : 4 } 此后，main.c中的代码就不标红了'
+migrated_from: Hexo
+---
+{% raw %}
+<h1 id="使用Vscode调试Linux内核">使用Vscode调试Linux内核</h1><p>上一篇博客我们在虚拟机中编译了Linux内核，并且使用Qemu和gdb进行调试，但是gdb的指令我还不熟练，还是想用vscode来调试，这样也更加方便</p>
+<h2 id="Vscode插件安装">Vscode插件安装</h2><h3 id="remote-ssh">remote-ssh</h3><p><img alt="image-20231120124509960" decoding="async" loading="lazy" src="/assets/images/posts/202311201245007.png"/></p>
+<p>安装完成后右边工具栏会多出一个功能</p>
+<p><img alt="image-20231120124653194" decoding="async" loading="lazy" src="/assets/images/posts/202311201246229.png"/></p>
+<p>按F1呼出对话框，输入<code>remote-ssh</code>，选择open ssh configuration file。</p>
+<p><img alt="image-20231120124748850" decoding="async" loading="lazy" src="/assets/images/posts/202311201247886.png"/></p>
+<p>选择第一个配置文件</p>
+<p><img alt="image-20231120124824202" decoding="async" loading="lazy" src="/assets/images/posts/202311201248231.png"/></p>
+<pre class="highlight"><code class="language-plaintext">Host 自定义连接名称
+    HostName 服务器IP地址
+    User 用户名</code></pre>
+<h3 id="C-C">C/C++</h3><p>安装C/C++插件</p>
+<p><img alt="image-20231120125110014" decoding="async" loading="lazy" src="/assets/images/posts/202311201251048.png"/></p>
+<p>依次点击【运行】-&gt;【打开配置】，将以下配置复制到launch.json中。</p>
+<p><strong>该代码不需要更改，直接粘贴</strong></p>
+<pre class="highlight"><code class="language-json"><span class="punctuation">{</span>
+    <span class="comment">// 使用 IntelliSense 了解相关属性。 </span>
+    <span class="comment">// 悬停以查看现有属性的描述。</span>
+    <span class="comment">// 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387</span>
+    <span class="attr">"version"</span><span class="punctuation">:</span> <span class="string">"0.2.0"</span><span class="punctuation">,</span>
+    <span class="attr">"configurations"</span><span class="punctuation">:</span> <span class="punctuation">[</span>
+        <span class="punctuation">{</span>
+            <span class="attr">"name"</span><span class="punctuation">:</span> <span class="string">"kernel-debug"</span><span class="punctuation">,</span>   <span class="comment">//随便起名</span>
+            <span class="attr">"type"</span><span class="punctuation">:</span> <span class="string">"cppdbg"</span><span class="punctuation">,</span>
+            <span class="attr">"request"</span><span class="punctuation">:</span> <span class="string">"launch"</span><span class="punctuation">,</span>
+            <span class="attr">"miDebuggerServerAddress"</span><span class="punctuation">:</span> <span class="string">"127.0.0.1:1234"</span><span class="punctuation">,</span>  <span class="comment">//远端调试地址，1234为qemu的监视端口</span>
+            <span class="attr">"program"</span><span class="punctuation">:</span> <span class="string">"${workspaceFolder}/vmlinux"</span><span class="punctuation">,</span>     <span class="comment">//当前目录下的vmlinux</span>
+            <span class="attr">"args"</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span>
+            <span class="attr">"stopAtEntry"</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span>
+            <span class="attr">"cwd"</span><span class="punctuation">:</span> <span class="string">"${workspaceFolder}"</span><span class="punctuation">,</span>
+            <span class="attr">"environment"</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span>
+            <span class="attr">"externalConsole"</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span>
+            <span class="attr">"logging"</span><span class="punctuation">:</span> <span class="punctuation">{</span>
+                <span class="attr">"engineLogging"</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span>
+            <span class="punctuation">}</span><span class="punctuation">,</span>
+            <span class="attr">"MIMode"</span><span class="punctuation">:</span> <span class="string">"gdb"</span><span class="punctuation">,</span>
+        <span class="punctuation">}</span>
+    <span class="punctuation">]</span>
+<span class="punctuation">}</span></code></pre>
+<h2 id="Vscode调试">Vscode调试</h2><h3 id="在虚拟机中启动qemu">在虚拟机中启动qemu</h3><p>在<strong>Linux内核文件夹下</strong>运行此命令</p>
+<pre class="highlight"><code class="language-sh">qemu-system-x86_64 -kernel ./arch/x86/boot/bzImage -initrd ../initramfs.cpio.gz -append <span class="string">"nokaslr console=ttyS0"</span> -s -S -nographic</code></pre>
+<h3 id="打断点">打断点</h3><p>打开init/main.c，我打了如下的断点</p>
+<p><img alt="image-20231120130037370" decoding="async" loading="lazy" src="/assets/images/posts/202311201300424.png"/></p>
+<h3 id="调试">调试</h3><p><img alt="image-20231120130522009" decoding="async" loading="lazy" src="/assets/images/posts/202311201305050.png"/></p>
+<p>然后在vscode中就可以看到调试结果了</p>
+<h2 id="代码中标红的问题">代码中标红的问题</h2><p>代码标红是缺少compile_commands.json文件</p>
+<p>我在B站上学习的时候，是跟着这位up主来的（源码被猫吃了），他的解决方案如下：</p>
+<p>在终端键入命令</p>
+<pre class="highlight"><code class="language-sh">./scripts/clang-tools/gen_compile_commands.py</code></pre>
+<p>在源码目录下就生成了<code>compile_commands.json</code>文件</p>
+<p>在vscode中：<code>ctrl+shipt+p</code>选择C/C++：Edit Coonfigurations,</p>
+<p>在c_cpp_properties.json</p>
+<pre class="highlight"><code class="language-json"><span class="punctuation">{</span>
+    <span class="attr">"configurations"</span><span class="punctuation">:</span> <span class="punctuation">[</span>
+        <span class="punctuation">{</span>
+            <span class="attr">"name"</span><span class="punctuation">:</span> <span class="string">"Linux"</span><span class="punctuation">,</span>
+            <span class="attr">"includePath"</span><span class="punctuation">:</span> <span class="punctuation">[</span>
+                <span class="string">"${workspaceFolder}/**"</span>
+            <span class="punctuation">]</span><span class="punctuation">,</span>
+            <span class="attr">"defines"</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span>
+            <span class="attr">"compilerPath"</span><span class="punctuation">:</span> <span class="string">"/usr/bin/gcc"</span><span class="punctuation">,</span>
+            <span class="attr">"cStandard"</span><span class="punctuation">:</span> <span class="string">"c17"</span><span class="punctuation">,</span>
+            <span class="attr">"cppStandard"</span><span class="punctuation">:</span> <span class="string">"gnu++17"</span><span class="punctuation">,</span>
+            <span class="attr">"intelliSenseMode"</span><span class="punctuation">:</span> <span class="string">"linux-gcc-x64"</span><span class="punctuation">,</span>
+            <span class="attr">"compileCommands"</span><span class="punctuation">:</span> <span class="string">"${workspaceFolder}/compile_commands.json"</span>
+        <span class="punctuation">}</span>
+    <span class="punctuation">]</span><span class="punctuation">,</span>
+    <span class="attr">"version"</span><span class="punctuation">:</span> <span class="number">4</span>
+<span class="punctuation">}</span></code></pre>
+<p>此后，main.c中的代码就不标红了</p>
+
+{% endraw %}

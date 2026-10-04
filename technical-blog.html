@@ -1,0 +1,23 @@
+---
+layout: default
+title: Tech Blog
+nav: blog
+permalink: /technical-blog/
+---
+<section class="page-container blog-page">
+  <div class="page-heading"><h1>Tech Blog</h1><span class="total-count">{{ site.posts.size }} 篇文章</span></div>
+  <p class="page-intro">深度学习、推理系统与 Linux，记录学习和实践。</p>
+  <div class="blog-controls" hidden>
+    <label class="search-label" for="post-search">搜索文章</label>
+    <div class="search-field"><span aria-hidden="true">⌕</span><input id="post-search" type="search" placeholder="搜索标题、正文或关键词…" autocomplete="off"><kbd aria-hidden="true">/</kbd></div>
+    <div class="filters" role="group" aria-label="按分类筛选">
+      <button type="button" data-category="" aria-pressed="true">全部 <span>{{ site.posts.size }}</span></button>
+      {% assign categories = site.categories | sort %}{% for category in categories %}<button type="button" data-category="{{ category[0] | escape }}" aria-pressed="false">{{ category[0] }} <span>{{ category[1].size }}</span></button>{% endfor %}
+      <button type="button" data-category="__uncategorized" aria-pressed="false">未分类 <span>{% assign uncategorized = 0 %}{% for post in site.posts %}{% if post.categories.size == 0 %}{% assign uncategorized = uncategorized | plus: 1 %}{% endif %}{% endfor %}{{ uncategorized }}</span></button>
+    </div>
+    <p id="search-status" class="search-status" role="status" aria-live="polite"></p>
+  </div>
+  <noscript><p><a href="{{ '/categories/' | relative_url }}">按分类浏览</a> · <a href="{{ '/tags/' | relative_url }}">按标签浏览</a></p></noscript>
+  {% include post-list.html posts=site.posts %}
+  <div class="empty-state" hidden><p>没有找到匹配的文章。</p><button type="button" id="clear-search">清除搜索与筛选</button></div>
+</section>

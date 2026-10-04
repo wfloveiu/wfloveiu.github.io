@@ -1,0 +1,110 @@
+---
+layout: post
+title: 基于llam2学习推理过程
+date: '2024-08-21T11:34:09.000Z'
+last_modified_at: '2024-08-21T11:36:29.767Z'
+permalink: /2024/08/21/基于llam2学习推理过程/
+categories: []
+tags: []
+description: 在上一节学习了Transformer的搭建过程，但是对于实际推理的流程，比如参数如何加载？batch中的多个sequence如何并行地推理还不甚清楚。由于vLLM内容繁杂，故使用llama提供的generator来做推理过程的学习，顺便再重温一下llama2的…
+reading_time: 5
+toc:
+- text: 基于llam2学习推理过程
+  id: 基于llam2学习推理过程
+  level: 1
+- text: 分布式并行策略
+  id: 分布式并行策略
+  level: 2
+- text: 推理流程
+  id: 推理流程
+  level: 2
+search_text: '基于llam2学习推理过程 在上一节学习了Transformer的搭建过程，但是对于实际推理的流程，比如参数如何加载？batch中的多个sequence如何并行地推理还不甚清楚。由于vLLM内容繁杂，故使用llama提供的generator来做推理过程的学习，顺便再重温一下llama2的架构。 分布式并行策略 数据并行(DP)：在数据并行训练中，数据集被分割成几个碎片，每个碎片被分配到一个设备上。每个设备将持有一个完整的模型副 模型并行(MP)：包括流水线并行(PP)和张量并行(TP)。 流水线为层间并行，对模型不同的 Transformer 层间进行分割 ， 张量并行为层内并行，对模型参数层内进行分割 推理流程 在 example_chat_completion.py 的 main 函数中， dialog 为要推理的句子。 generator 的初始化调用 build 函数 tokenizer = Tokenizer(model_path=tokenizer_path) model_args.vocab_size = tokenizer.n_words torch.set_default_tensor_type(torch.cuda.HalfTensor) model = Transformer(model_args) model.load_state_dict(checkpoint, strict= False ) #将预训练的模型参数加载到模型中 return Llama(model, tokenizer) 使用 load_state_dict 来加载模型参数，算是解决了上边的疑惑之一。 model 是 Transformer 对象，其实就是Llama2结构。 tokenizer 的作用是将句子转换成不同token对应的数字。 然后就是 generate 函数开始推理。 首先是在文本长度上的处理，输入的句子长度不一致，并且推理结束时的generate长度也不一致 min_prompt_len = min ( len (t) for t in prompt_tokens) max_prompt_len = max ( len (t) for t in prompt_tokens) assert max_prompt_len <= params.max_seq_len
+  total_len = min (params.max_seq_len, max_gen_len + max_prompt_len) pad_id = self.tokenizer.pad_id tokens = torch.full((bsz, total_len), pad_id,dtype=torch.long,device= "cuda" ) params.max_seq_len 是prompt+generate的总长度的最大值， tokens 首先按 total_len 的长度初始化成全是pad_id，假设 bsz=2, total_len=6，则 tokens 为 [[-1, -1, -1, -1, -1, -1], [-1, -1, -1, -1, -1]] 。 然后使用prompt_tokens对其赋值。 for k, t in enumerate (prompt_tokens): tokens[k, : len (t)] = torch.tensor(t, dtype=torch.long, device= "cuda" ) 假设 prompt_tokens 为 [[22172, 11148, 3304], [[1058, 526, 366, 29973]] ，则 tokens 变成 [[22172, 11148, 3304, -1, -1, -1], [1058, 526, 366, 29973, -1, -1]] 。 注意：这里的填充方式是右填充(也有左填充，区别见 https://zhuanlan.zhihu.com/p/675273498 ) 其实这才是正式推理，它从 min_promt_len 开始，继续使用上边示例， min_promt_len =3 prev_pos = 0 #上次推理的位置，初始肯定是0啦 for cur_pos in range (min_prompt_len, total_len): logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos) if temperature > 0 : probs = torch.softmax(logits[:, - 1 ] / temperature, dim=- 1 ) next_token = sample_top_p(probs,
+  top_p) else : next_token = torch.argmax(logits[:, - 1 ], dim=- 1 ) next_token = next_token.reshape(- 1 ) # only replace token if prompt has already been generated next_token = torch.where( input_text_mask[:, cur_pos], tokens[:, cur_pos], next_token ) tokens[:, cur_pos] = next_token # ...... prev_pos = cur_pos for循环第一轮迭代， cur_pos = 3 ， prev_pos = 0 ，则把 只把前三列 [[22172, 11148, 3304], [[1058, 526, 366]]传给 model.forward 方法，返回值 logits 的shape是(batch_size, 3, vocab_size) 在使用 softmax 或 argmax 时只取最后一列 假设该方法返回的 logits 中第一个句子的next token 为 29892，第二个句子的 next token 为 115， 此时只更新第一个句子的第四个token，因为第二个句子的第四个token已经存在。 经过第一次迭代后，tokens 变成了 [[22172, 11148, 3304, 29892, -1， -1], [1058, 526, 366, 29973, -1， -1]] 。 在此有个疑问，如果batch_size很大并且一个batch中文本长度差异很大，那么prompt_len大的句子要经过很久才开始真正的推理，但是每次都把它参与运算了，这会存在较为严重的浪费算力的情况？ 上边的想法应该是错误的！！虽然很长的句子很久开始真正推理，但每次将它纳入批次进行forward生成的KV cache是有用的！不能算作算力浪费 for循环第二轮迭代时， prev_pos = 3 ， cur_pos = 4 ，则只把第四列(pos=3)[[29892], [29973]]传给model.forward。 在 class Transformer.forward() 中，着重关注一下mask
+  mask = None if seqlen > 1 : mask = torch.full( (seqlen, seqlen), float ( "-inf" ), device=tokens.device ) mask = torch.triu(mask, diagonal= 1 ) # When performing key-value caching, we compute the attention scores # only for the new sequence. Thus, the matrix of scores is of size # (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for # j > cache_len + i, since row i corresponds to token cache_len + i. mask = torch.hstack([ torch.zeros((seqlen, start_pos), device=tokens.device), mask ]).type_as(h) 在prefill阶段即for循环第一轮迭代时，mask是一个大小(3,  3)的上三角矩阵，长这个样子 (   [0, -inf, -inf], [0, 0,    -inf] [0, 0,    0   ] ) 而decode阶段的seq_len=1，只计算当前输入与前边token的Attention-Score，因此不需要mask'
+migrated_from: Hexo
+---
+{% raw %}
+<h1 id="基于llam2学习推理过程">基于llam2学习推理过程</h1><p>在上一节学习了Transformer的搭建过程，但是对于实际推理的流程，比如参数如何加载？batch中的多个sequence如何并行地推理还不甚清楚。由于vLLM内容繁杂，故使用llama提供的generator来做推理过程的学习，顺便再重温一下llama2的架构。</p>
+<h2 id="分布式并行策略">分布式并行策略</h2><ul>
+<li>数据并行(DP)：在数据并行训练中，数据集被分割成几个碎片，每个碎片被分配到一个设备上。每个设备将持有一个完整的模型副</li>
+<li>模型并行(MP)：包括流水线并行(PP)和张量并行(TP)。<strong>流水线为层间并行，对模型不同的 Transformer 层间进行分割</strong>，<strong>张量并行为层内并行，对模型参数层内进行分割</strong></li>
+</ul>
+<h2 id="推理流程">推理流程</h2><p>在<code>example_chat_completion.py</code>的<code>main</code>函数中，<code>dialog</code>为要推理的句子。<code>generator</code>的初始化调用<code>build</code>函数</p>
+<pre class="highlight"><code class="language-python">tokenizer = Tokenizer(model_path=tokenizer_path)
+model_args.vocab_size = tokenizer.n_words
+torch.set_default_tensor_type(torch.cuda.HalfTensor)
+model = Transformer(model_args)
+model.load_state_dict(checkpoint, strict=<span class="literal">False</span>) <span class="comment">#将预训练的模型参数加载到模型中</span>
+
+<span class="keyword">return</span> Llama(model, tokenizer)</code></pre>
+<p>使用<code>load_state_dict</code>来加载模型参数，算是解决了上边的疑惑之一。<code>model</code>是<code>Transformer</code>对象，其实就是Llama2结构。<code>tokenizer</code>的作用是将句子转换成不同token对应的数字。</p>
+<hr/>
+<p>然后就是<code>generate</code>函数开始推理。</p>
+<p>首先是在文本长度上的处理，输入的句子长度不一致，并且推理结束时的generate长度也不一致</p>
+<pre class="highlight"><code class="language-python">min_prompt_len = <span class="built_in">min</span>(<span class="built_in">len</span>(t) <span class="keyword">for</span> t <span class="keyword">in</span> prompt_tokens)
+max_prompt_len = <span class="built_in">max</span>(<span class="built_in">len</span>(t) <span class="keyword">for</span> t <span class="keyword">in</span> prompt_tokens)
+<span class="keyword">assert</span> max_prompt_len &lt;= params.max_seq_len
+total_len = <span class="built_in">min</span>(params.max_seq_len, max_gen_len + max_prompt_len)
+
+pad_id = self.tokenizer.pad_id
+tokens = torch.full((bsz, total_len), pad_id,dtype=torch.long,device=<span class="string">"cuda"</span>)</code></pre>
+<p><code>params.max_seq_len</code>是prompt+generate的总长度的最大值，<code>tokens</code>首先按<code>total_len</code>的长度初始化成全是pad_id，假设 bsz=2, total_len=6，则 tokens 为 <code>[[-1, -1, -1, -1, -1, -1], [-1, -1, -1, -1, -1]]</code>。</p>
+<p>然后使用prompt_tokens对其赋值。</p>
+<pre class="highlight"><code class="language-python"><span class="keyword">for</span> k, t <span class="keyword">in</span> <span class="built_in">enumerate</span>(prompt_tokens):
+    tokens[k, : <span class="built_in">len</span>(t)] = torch.tensor(t, dtype=torch.long, device=<span class="string">"cuda"</span>)</code></pre>
+<p>假设 prompt_tokens 为 <code>[[22172, 11148, 3304], [[1058, 526, 366, 29973]]</code>，则 tokens 变成<code>[[22172, 11148, 3304, -1, -1, -1], [1058, 526, 366, 29973, -1, -1]]</code>。</p>
+<p>注意：这里的填充方式是右填充(也有左填充，区别见<a href="https://zhuanlan.zhihu.com/p/675273498" rel="noopener noreferrer" target="_blank">https://zhuanlan.zhihu.com/p/675273498</a>)</p>
+<hr/>
+<p>其实这才是正式推理，它从<code>min_promt_len</code>开始，继续使用上边示例，<code>min_promt_len</code>=3</p>
+<pre class="highlight"><code class="language-python">prev_pos = <span class="number">0</span> <span class="comment">#上次推理的位置，初始肯定是0啦</span>
+<span class="keyword">for</span> cur_pos <span class="keyword">in</span> <span class="built_in">range</span>(min_prompt_len, total_len):
+    logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
+    <span class="keyword">if</span> temperature &gt; <span class="number">0</span>:
+        probs = torch.softmax(logits[:, -<span class="number">1</span>] / temperature, dim=-<span class="number">1</span>)
+        next_token = sample_top_p(probs, top_p)
+    <span class="keyword">else</span>:
+        next_token = torch.argmax(logits[:, -<span class="number">1</span>], dim=-<span class="number">1</span>)
+
+    next_token = next_token.reshape(-<span class="number">1</span>)
+    <span class="comment"># only replace token if prompt has already been generated</span>
+    next_token = torch.where(
+        input_text_mask[:, cur_pos], tokens[:, cur_pos], next_token
+    )
+    tokens[:, cur_pos] = next_token
+    <span class="comment"># ......</span>
+    prev_pos = cur_pos</code></pre>
+<p>for循环第一轮迭代，<code>cur_pos = 3</code>，<code>prev_pos = 0</code>，则把<strong>只把前三列</strong>[[22172, 11148, 3304], [[1058, 526, 366]]传给 model.forward 方法，返回值<code>logits</code>的shape是(batch_size, 3, vocab_size)</p>
+<p><strong>在使用<code>softmax</code>或<code>argmax</code>时只取最后一列</strong></p>
+<p>假设该方法返回的 logits 中第一个句子的next token 为 29892，第二个句子的 next token 为 115，<strong>此时只更新第一个句子的第四个token，因为第二个句子的第四个token已经存在。</strong>经过第一次迭代后，tokens 变成了 <code>[[22172, 11148, 3304, 29892, -1， -1], [1058, 526, 366, 29973, -1， -1]]</code>。</p>
+<blockquote>
+<p><strong>在此有个疑问，如果batch_size很大并且一个batch中文本长度差异很大，那么prompt_len大的句子要经过很久才开始真正的推理，但是每次都把它参与运算了，这会存在较为严重的浪费算力的情况？</strong></p>
+<p><strong>上边的想法应该是错误的！！虽然很长的句子很久开始真正推理，但每次将它纳入批次进行forward生成的KV cache是有用的！不能算作算力浪费</strong></p>
+</blockquote>
+<p>for循环第二轮迭代时，<code>prev_pos = 3</code>，<code>cur_pos = 4</code>，则只把第四列(pos=3)[[29892], [29973]]传给model.forward。</p>
+<hr/>
+<p>在<code>class Transformer.forward()</code>中，着重关注一下mask</p>
+<pre class="highlight"><code class="language-python">mask = <span class="literal">None</span>
+<span class="keyword">if</span> seqlen &gt; <span class="number">1</span>:
+    mask = torch.full(
+        (seqlen, seqlen), <span class="built_in">float</span>(<span class="string">"-inf"</span>), device=tokens.device
+    )
+
+    mask = torch.triu(mask, diagonal=<span class="number">1</span>)
+
+    <span class="comment"># When performing key-value caching, we compute the attention scores</span>
+    <span class="comment"># only for the new sequence. Thus, the matrix of scores is of size</span>
+    <span class="comment"># (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for</span>
+    <span class="comment"># j &gt; cache_len + i, since row i corresponds to token cache_len + i.</span>
+    mask = torch.hstack([
+        torch.zeros((seqlen, start_pos), device=tokens.device),
+        mask
+    ]).type_as(h)</code></pre>
+<p>在prefill阶段即for循环第一轮迭代时，mask是一个大小(3,  3)的上三角矩阵，长这个样子</p>
+<pre class="highlight"><code class="language-plaintext">(   [0, -inf, -inf],
+    [0, 0,    -inf]
+    [0, 0,    0   ]
+    )</code></pre>
+<p>而decode阶段的seq_len=1，只计算当前输入与前边token的Attention-Score，因此不需要mask</p>
+
+{% endraw %}

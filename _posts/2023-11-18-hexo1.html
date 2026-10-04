@@ -1,0 +1,39 @@
+---
+layout: post
+title: Butterfly中取消头像转动
+date: '2023-11-18T05:35:50.000Z'
+last_modified_at: '2024-07-24T05:20:05.322Z'
+permalink: /2023/11/18/hexo1/
+categories:
+- Hexo
+tags:
+- 更改配置
+description: 这个在_config中改不了，经过查阅资料，发现在 hexo-theme-butterfly/source/css/_layout/aside.styl中进行更改,大约在324行
+reading_time: 1
+toc:
+- text: Hexo+Butterfly中鼠标放到头像上头像会转动，如何取消转动
+  id: Hexo-Butterfly中鼠标放到头像上头像会转动，如何取消转动
+  level: 2
+search_text: 'Hexo+Butterfly中鼠标放到头像上头像会转动，如何取消转动 这个在_config中改不了，经过查阅资料，发现在 hexo-theme-butterfly/source/css/_layout/aside.styl中进行更改,大约在324行 img width: 100% height: 100% transition: filter 375ms ease-in .2s, transform .3s object-fit: cover &:hover transform: rotate(360deg) 将后两行删掉 img width: 100% height: 100% transition: filter 375ms ease-in .2s, transform .3s object-fit: cover 这样头像就不会转动了 参考链接: https://github.com/jerryc127/hexo-theme-butterfly/discussions/878'
+migrated_from: Hexo
+---
+{% raw %}
+<h2 id="Hexo-Butterfly中鼠标放到头像上头像会转动，如何取消转动">Hexo+Butterfly中鼠标放到头像上头像会转动，如何取消转动</h2><p>这个在_config中改不了，经过查阅资料，发现在 hexo-theme-butterfly/source/css/_layout/aside.styl中进行更改,大约在324行</p>
+<pre class="highlight"><code class="language-plaintext">img
+  width: 100%
+  height: 100%
+  transition: filter 375ms ease-in .2s, transform .3s
+  object-fit: cover
+
+  &amp;:hover
+    transform: rotate(360deg)</code></pre>
+<p>将后两行删掉</p>
+<pre class="highlight"><code class="language-plaintext">img
+  width: 100%
+  height: 100%
+  transition: filter 375ms ease-in .2s, transform .3s
+  object-fit: cover</code></pre>
+<p>这样头像就不会转动了</p>
+<p>参考链接: <a href="https://github.com/jerryc127/hexo-theme-butterfly/discussions/878" rel="noopener noreferrer" target="_blank">https://github.com/jerryc127/hexo-theme-butterfly/discussions/878</a></p>
+
+{% endraw %}

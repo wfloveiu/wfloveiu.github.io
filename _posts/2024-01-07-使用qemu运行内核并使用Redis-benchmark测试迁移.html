@@ -1,0 +1,232 @@
+---
+layout: post
+title: 使用qemu运行内核并使用Redis-benchmark测试迁移
+date: '2024-01-07T13:52:00.000Z'
+last_modified_at: '2024-01-07T13:53:04.095Z'
+permalink: /2024/01/07/使用qemu运行内核并使用Redis-benchmark测试迁移/
+categories:
+- Linux内核
+tags: []
+description: 前情提要：本来在实体机上想进行测试程序检验NUMA节点间的迁移，因为CPU型号问题无法开启NUMA（只有一个NUMA节点）。遂采用师兄的方法：使用qemu虚拟机来运行内核。
+reading_time: 7
+toc:
+- text: 使用qemu运行内核并使用Redis-benchmark测试迁移
+  id: 使用qemu运行内核并使用Redis-benchmark测试迁移
+  level: 1
+- text: 编译内核镜像
+  id: 编译内核镜像
+  level: 2
+- text: 基于ubuntu base构建根文件系统
+  id: 基于ubuntu-base构建根文件系统
+  level: 2
+- text: 使用qemu启动
+  id: 使用qemu启动
+  level: 2
+- text: 使用redis-benchmark测试
+  id: 使用redis-benchmark测试
+  level: 2
+search_text: '使用qemu运行内核并使用Redis-benchmark测试迁移 前情提要：本来在实体机上想进行测试程序检验NUMA节点间的迁移，因为CPU型号问题无法开启NUMA（只有一个NUMA节点）。遂采用师兄的方法：使用qemu虚拟机来运行内核。 下边给出配置过程 编译内核镜像 1、先提前安装一些包 sudo apt update && sudo apt upgrade sudo apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison 2、下载kernel git clone 自己的kernel地址 make menuconfg 3、修改.config vim ./.config # 将下边两行注释 CONFIG_DEBUG_INFO=y CONFIG_DEBUG_INFO_BTF=y # 将下边一行引号内改为空 CONFIG_SYSTEM_TRUSTED_KEYS="debian/canonical-certs.pem" CONFIG_SYSTEM_REVOCATION_KEYS="debian/canonical-revoked-certs.pem" 4、编译 make -j 32 5、安装qemu sudo apt-get install qemu-system-x86 基于ubuntu base构建根文件系统 之前使用busybox会导致其中没有我们需要的bash指令，随使用ubuntu base 1、下载ubuntu base 去清华镜像源或者 ubuntu官网 ，我这里选择的是22.04下的 ubuntu-base-23.04-base-amd64.tar.gz （因为我的ubuntu系统是22.04） cd ~/download wget https://cdimage.ubuntu.com/ubuntu-base/releases/23.04/release/ubuntu-base-23.04-base-amd64.tar.gz 2、创建image镜像（此处起名为ubuntu_rootfs.ext4） 下面给出我的方法，在download目录下 dd if=/dev/zero of=ubuntu_rootfs.ext4
+  bs=1G count=30 # 创建30G容量的镜像文件 mkfs.ext4 ubuntu_rootfs.ext4  #格式化为ext4的文件系统 3、创建目录作为镜像文件的挂载点，将镜像文件挂在上去 在download目录下 mkdir rootfs sudo mount ubuntu_rootfs.ext4 rootfs/ 4、将ubuntu base解压到rootfs下 sudo tar -zxvf  ubuntu-base-22.04-base-amd64.tar.gz -C rootfs 5、拷贝主机中的网络配置信息到镜像中，方便后续用apt安装软件 sudo cp /etc/resolv.conf rootfs/etc 6、创建 mount.sh mnt() { echo "MOUNTING" sudo mount -t proc /proc ${2}proc sudo mount -t sysfs /sys ${2}sys sudo mount -o bind /dev ${2}dev sudo mount -o bind /dev/pts ${2}dev/pts sudo chroot ${2} } umnt() { echo "UNMOUNTING" sudo umount ${2}proc sudo umount ${2}sys sudo umount ${2}dev/pts sudo umount ${2}dev sudo umount ${2} } if [ "$1" == "-m" ] && [ -n "$2" ] ; then mnt $1 $2 elif [ "$1" == "-u" ] && [ -n "$2" ]; then umnt $1 $2 fi 7、执行挂载任务 ./mount.sh -m rootfs/ 其中的指令 chroot 将 rootfs 暂时设置为根目录，并启动终端。 8、安装必要的软件 apt update && apt upgrade apt install git vim init linux-image-kvm ...... apt install redis-server   #安装redis服务器 # 安装redis-benchmark wget http://download.redis.io/releases/redis-6.0.9.tar.gz
+  tar xzf redis-6.0.9.tar.gz cd redis-6.0.9/src make make install redis-benchmark --help #检测是否安装成功 这些软件都将会安装到ubuntu_rootfs.ext4镜像中 9、设置密码等 update-initramfs -u echo root:root | chpasswd echo ttyS0 > /etc/securetty systemctl enable serial-getty@ttyS0.service 10、退出卸载镜像 ./mount.sh -u rootfs/ 此后我们使用qemu启动这个镜像文件 特殊说明：我们使用qemu启动内核和之后，在里边是无法下载安装东西的，因为没有配置网络这些。因此比如当我们需要安装 redis 时，需要执行7、8、10即可 输入 exit 退出 chroot 使用qemu启动 1、配置启动qemu的脚本 ubuntuBaseImage="/home/wufang/download/ubuntu_rootfs.ext4" kernelDir=. sudo qemu-system-x86_64 \ -enable-kvm\ -machine pc,nvdimm=on -s\ -m 2G,slots=4,maxmem=32G \ -nographic -kernel $kernelDir/vmlinux \ -smp cores=4,threads=1,sockets=2 \ -hda $ubuntuBaseImage \ -object memory-backend-ram,id=mem0,size=1G  \ -object memory-backend-ram,id=mem1,size=1G  \ -numa node,memdev=mem0,cpus=0-3,nodeid=0 \ -numa node,memdev=mem1,cpus=4-7,nodeid=1 \ -numa node,nodeid=2 -numa node,nodeid=3 \ -object memory-backend-ram,id=nvdimm1,size=4G\ -device nvdimm,memdev=nvdimm1,id=nv1,unarmed=off,node=2
+  \ -object memory-backend-ram,id=nvdimm2,size=4G\ -device nvdimm,memdev=nvdimm2,id=nv2,unarmed=off,node=3 \ -append "console=ttyS0 crashkernel=712M root=/dev/sda rootfstype=ext4 rw loglevel=8"\ -net nic -net tap,ifname=tap0,script=no,downscript=no 2、启动 ./my_config.sh 使用redis-benchmark测试 redis-benchmark -h 127.0.0.1 -p 6379  -n 10000000 -r 1000000 -c 200 -d 32 -t ping,set,get -n：测试包数量 -r：随机key数量 -c：客户端连接数 -t：执行具体的测试命令合集 统计数据 cat /proc/vmstat | grep numa 指令结果含义为如下： numa_hit：成功的本地内存访问次数 numa_miss：表示无法从本地节点获取页面的失败次数，需要从其它节点获取 numa_foreign：表示页面分配给一个节点，但是被从其它节点访问的次数 numa_interleave：通过内存交错的方式分配的页面数量 编写脚本测试 STRS=( "numa_hit" "numa_miss" "numa_foreign" "numa_interleave" "numa_local" "numa_other" "numa_pte_updates" "numa_huge_pte_updates" "numa_hint_faults" "numa_hint_faults_local" "numa_pages_migrated" ) output_file="output.txt" for ((epooch=1; epooch<50; epooch++)) do declare -a PRE_VALUES declare -a END_VALUES PRE_TEST=$(cat /proc/vmstat | grep numa) IFS=$''\n'' read -rd '''' -a PRE_TEST_ARRAY
+  <<<"$PRE_TEST" for key in "${PRE_TEST_ARRAY[@]}"; do value=$(echo "$key" | awk ''{print $2}'') PRE_VALUES+=("$value") done redis-benchmark -h 127.0.0.1 -p 6379 -n 1000000 -r 200000 -c 10000 -d 32 -t ping,set,get & pid=$! wait "$pid" END_TEST=$(cat /proc/vmstat | grep numa) IFS=$''\n'' read -rd '''' -a END_TEST_ARRAY <<<"$END_TEST" for key in "${END_TEST_ARRAY[@]}"; do value=$(echo "$key" | awk ''{print $2}'') END_VALUES+=("$value") done for ((i=0; i<${#STRS[@]}; i++)) do diff=$((END_VALUES[i] - PRE_VALUES[i])) echo -n "$diff " >> "$output_file" echo "${END_VALUES[i]} ${PRE_VALUES[i]} $diff" done echo >> "$output_file" echo "The $epooch epo is over" unset PRE_VALUES unset END_VALUES unset PRE_TEST_ARRAY unset END_TEST_ARRAY sleep 60 done'
+migrated_from: Hexo
+---
+{% raw %}
+<h1 id="使用qemu运行内核并使用Redis-benchmark测试迁移">使用qemu运行内核并使用Redis-benchmark测试迁移</h1><p>前情提要：本来在实体机上想进行测试程序检验NUMA节点间的迁移，因为CPU型号问题无法开启NUMA（只有一个NUMA节点）。遂采用师兄的方法：使用qemu虚拟机来运行内核。</p>
+<p>下边给出配置过程</p>
+<h2 id="编译内核镜像">编译内核镜像</h2><p>1、先提前安装一些包</p>
+<pre class="highlight"><code class="language-shell">sudo apt update &amp;&amp; sudo apt upgrade
+sudo apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison</code></pre>
+<p>2、下载kernel</p>
+<pre class="highlight"><code class="language-plaintext">git clone 自己的kernel地址</code></pre>
+<pre class="highlight"><code class="language-plaintext">make menuconfg</code></pre>
+<p>3、修改.config</p>
+<pre class="highlight"><code class="language-shell">vim ./.config
+<span class="meta prompt_"># </span><span class="language-bash">将下边两行注释</span>
+CONFIG_DEBUG_INFO=y  
+CONFIG_DEBUG_INFO_BTF=y
+<span class="meta prompt_"># </span><span class="language-bash">将下边一行引号内改为空</span>
+CONFIG_SYSTEM_TRUSTED_KEYS="debian/canonical-certs.pem"
+CONFIG_SYSTEM_REVOCATION_KEYS="debian/canonical-revoked-certs.pem"</code></pre>
+<p>4、编译</p>
+<pre class="highlight"><code class="language-shell">make -j 32</code></pre>
+<p>5、安装qemu</p>
+<pre class="highlight"><code class="language-shell">sudo apt-get install qemu-system-x86</code></pre>
+<h2 id="基于ubuntu-base构建根文件系统">基于ubuntu base构建根文件系统</h2><p>之前使用busybox会导致其中没有我们需要的bash指令，随使用ubuntu base</p>
+<p>1、下载ubuntu base</p>
+<p>去清华镜像源或者<a href="https://cdimage.ubuntu.com/ubuntu-base/releases/" rel="noopener noreferrer" target="_blank">ubuntu官网</a>，我这里选择的是22.04下的<code>ubuntu-base-23.04-base-amd64.tar.gz</code>（因为我的ubuntu系统是22.04）</p>
+<pre class="highlight"><code class="language-plaintext">cd ~/download
+wget https://cdimage.ubuntu.com/ubuntu-base/releases/23.04/release/ubuntu-base-23.04-base-amd64.tar.gz</code></pre>
+<p>2、创建image镜像（此处起名为ubuntu_rootfs.ext4）</p>
+<p>下面给出我的方法，在download目录下</p>
+<pre class="highlight"><code class="language-shell">dd if=/dev/zero of=ubuntu_rootfs.ext4 bs=1G count=30 # 创建30G容量的镜像文件
+mkfs.ext4 ubuntu_rootfs.ext4  #格式化为ext4的文件系统</code></pre>
+<p>3、创建目录作为镜像文件的挂载点，将镜像文件挂在上去</p>
+<p>在download目录下</p>
+<pre class="highlight"><code class="language-shell">mkdir rootfs
+sudo mount ubuntu_rootfs.ext4 rootfs/</code></pre>
+<p>4、将ubuntu base解压到rootfs下</p>
+<pre class="highlight"><code class="language-shell">sudo tar -zxvf  ubuntu-base-22.04-base-amd64.tar.gz -C rootfs</code></pre>
+<p>5、拷贝主机中的网络配置信息到镜像中，方便后续用apt安装软件</p>
+<pre class="highlight"><code class="language-shell">sudo cp /etc/resolv.conf rootfs/etc</code></pre>
+<p>6、创建<code>mount.sh</code></p>
+<pre class="highlight"><code class="language-shell">mnt() {
+	echo "MOUNTING"
+	sudo mount -t proc /proc ${2}proc
+	sudo mount -t sysfs /sys ${2}sys
+	sudo mount -o bind /dev ${2}dev
+	sudo mount -o bind /dev/pts ${2}dev/pts
+	sudo chroot ${2}
+}
+umnt() {
+	echo "UNMOUNTING"
+	sudo umount ${2}proc
+	sudo umount ${2}sys
+	sudo umount ${2}dev/pts
+	sudo umount ${2}dev
+	sudo umount ${2}
+}
+
+if [ "$1" == "-m" ] &amp;&amp; [ -n "$2" ] ;
+then
+	mnt $1 $2
+elif [ "$1" == "-u" ] &amp;&amp; [ -n "$2" ];
+then
+	umnt $1 $2
+fi</code></pre>
+<p>7、执行挂载任务</p>
+<pre class="highlight"><code class="language-shell">./mount.sh -m rootfs/</code></pre>
+<p>其中的指令<code>chroot</code>将<code>rootfs</code>暂时设置为根目录，并启动终端。</p>
+<p>8、安装必要的软件</p>
+<pre class="highlight"><code class="language-shell">apt update &amp;&amp; apt upgrade
+apt install git vim init linux-image-kvm ......
+apt install redis-server   #安装redis服务器
+<span class="meta prompt_"></span>
+<span class="meta prompt_"># </span><span class="language-bash">安装redis-benchmark</span>
+wget http://download.redis.io/releases/redis-6.0.9.tar.gz
+tar xzf redis-6.0.9.tar.gz
+cd redis-6.0.9/src
+make
+make install
+redis-benchmark --help #检测是否安装成功</code></pre>
+<p>这些软件都将会安装到ubuntu_rootfs.ext4镜像中</p>
+<p>9、设置密码等</p>
+<pre class="highlight"><code class="language-shell">update-initramfs -u
+echo root:root | chpasswd
+echo ttyS0 &gt; /etc/securetty
+systemctl enable serial-getty@ttyS0.service</code></pre>
+<p>10、退出卸载镜像</p>
+<pre class="highlight"><code class="language-shell">./mount.sh -u rootfs/</code></pre>
+<p>此后我们使用qemu启动这个镜像文件</p>
+<p>特殊说明：我们使用qemu启动内核和之后，在里边是无法下载安装东西的，因为没有配置网络这些。因此比如当我们需要安装<code>redis</code>时，需要执行7、8、10即可</p>
+<p>输入<code>exit</code>退出<code>chroot</code></p>
+<h2 id="使用qemu启动">使用qemu启动</h2><p>1、配置启动qemu的脚本</p>
+<pre class="highlight"><code class="language-shell">ubuntuBaseImage="/home/wufang/download/ubuntu_rootfs.ext4"  
+kernelDir=.
+
+sudo qemu-system-x86_64 \
+    -enable-kvm\
+    -machine pc,nvdimm=on -s\
+    -m 2G,slots=4,maxmem=32G \
+    -nographic -kernel $kernelDir/vmlinux \
+    -smp cores=4,threads=1,sockets=2 \
+    -hda $ubuntuBaseImage \
+    -object memory-backend-ram,id=mem0,size=1G  \
+    -object memory-backend-ram,id=mem1,size=1G  \
+    -numa node,memdev=mem0,cpus=0-3,nodeid=0 \
+    -numa node,memdev=mem1,cpus=4-7,nodeid=1 \
+    -numa node,nodeid=2 -numa node,nodeid=3 \
+    -object memory-backend-ram,id=nvdimm1,size=4G\
+    -device nvdimm,memdev=nvdimm1,id=nv1,unarmed=off,node=2 \
+    -object memory-backend-ram,id=nvdimm2,size=4G\
+    -device nvdimm,memdev=nvdimm2,id=nv2,unarmed=off,node=3 \
+    -append "console=ttyS0 crashkernel=712M root=/dev/sda rootfstype=ext4 rw loglevel=8"\
+    -net nic -net tap,ifname=tap0,script=no,downscript=no
+
+</code></pre>
+<p>2、启动</p>
+<pre class="highlight"><code class="language-shell">./my_config.sh</code></pre>
+<h2 id="使用redis-benchmark测试">使用redis-benchmark测试</h2><pre class="highlight"><code class="language-plaintext">redis-benchmark -h 127.0.0.1 -p 6379  -n 10000000 -r 1000000 -c 200 -d 32 -t ping,set,get</code></pre>
+<ul>
+<li>-n：测试包数量</li>
+<li>-r：随机key数量</li>
+<li>-c：客户端连接数</li>
+<li>-t：执行具体的测试命令合集</li>
+</ul>
+<p>统计数据</p>
+<pre class="highlight"><code class="language-shell">cat /proc/vmstat | grep numa</code></pre>
+<p>指令结果含义为如下：</p>
+<ul>
+<li>numa_hit：成功的本地内存访问次数</li>
+<li>numa_miss：表示无法从本地节点获取页面的失败次数，需要从其它节点获取</li>
+<li>numa_foreign：表示页面分配给一个节点，但是被从其它节点访问的次数</li>
+<li>numa_interleave：通过内存交错的方式分配的页面数量</li>
+</ul>
+<p>编写脚本测试</p>
+<pre class="highlight"><code class="language-shell">STRS=(
+  "numa_hit"
+  "numa_miss"
+  "numa_foreign"
+  "numa_interleave"
+  "numa_local"
+  "numa_other"
+  "numa_pte_updates"
+  "numa_huge_pte_updates"
+  "numa_hint_faults"
+  "numa_hint_faults_local"
+  "numa_pages_migrated"
+)
+
+output_file="output.txt" 
+
+for ((epooch=1; epooch&lt;50; epooch++))
+do
+
+        declare -a PRE_VALUES
+        declare -a END_VALUES
+
+
+        PRE_TEST=$(cat /proc/vmstat | grep numa)
+        IFS=$'\n' read -rd '' -a PRE_TEST_ARRAY &lt;&lt;&lt;"$PRE_TEST"
+        for key in "${PRE_TEST_ARRAY[@]}";
+        do
+                value=$(echo "$key" | awk '{print $2}')
+                PRE_VALUES+=("$value")
+        done
+
+
+
+        redis-benchmark -h 127.0.0.1 -p 6379 -n 1000000 -r 200000 -c 10000 -d 32 -t ping,set,get &amp;
+        pid=$!
+        wait "$pid"
+
+
+
+        END_TEST=$(cat /proc/vmstat | grep numa)
+        IFS=$'\n' read -rd '' -a END_TEST_ARRAY &lt;&lt;&lt;"$END_TEST"
+
+        for key in "${END_TEST_ARRAY[@]}";
+        do
+                value=$(echo "$key" | awk '{print $2}')
+                END_VALUES+=("$value")
+        done
+
+
+        for ((i=0; i&lt;${#STRS[@]}; i++))
+        do
+                diff=$((END_VALUES[i] - PRE_VALUES[i]))
+                echo -n "$diff " &gt;&gt; "$output_file"
+                echo "${END_VALUES[i]} ${PRE_VALUES[i]} $diff"
+        done
+
+        echo &gt;&gt; "$output_file"
+        echo "The $epooch epo is over"
+        unset PRE_VALUES
+        unset END_VALUES
+        unset PRE_TEST_ARRAY
+        unset END_TEST_ARRAY
+        sleep 60
+done</code></pre>
+
+{% endraw %}

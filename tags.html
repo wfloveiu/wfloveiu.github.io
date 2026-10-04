@@ -1,0 +1,7 @@
+---
+layout: default
+title: Tags
+nav: blog
+permalink: /tags/
+---
+<section class="page-container"><a class="back-link" href="{{ '/technical-blog/' | relative_url }}">← Tech Blog</a><div class="page-heading"><h1>Tags</h1></div><ul class="taxonomy-list">{% assign tags = site.tags | sort %}{% for tag in tags %}<li><a href="{{ '/tags/' | append: tag[0] | append: '/' | relative_url }}">{{ tag[0] }}</a><span>{{ tag[1].size }} 篇</span></li>{% endfor %}</ul></section>

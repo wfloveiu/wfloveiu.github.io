@@ -1,0 +1,33 @@
+---
+layout: default
+title: Publications
+nav: publications
+permalink: /publications/
+description: Research publications on efficient model architectures and attention operators.
+---
+<section class="page-container publications-page">
+  <div class="page-heading"><h1>Publications</h1></div>
+  <div class="filters publication-filters" role="group" aria-label="Filter publications by topic" hidden>
+    <button type="button" data-publication-topic="" aria-pressed="true">All</button>
+    {% capture topic_names %}{% for publication in site.data.publications %}{% for topic in publication.topics %}{{ topic }}|{% endfor %}{% endfor %}{% endcapture %}
+    {% assign topics = topic_names | split: '|' | uniq | sort %}
+    {% for topic in topics %}<button type="button" data-publication-topic="{{ topic | escape }}" aria-pressed="false">{{ topic }}</button>{% endfor %}
+  </div>
+  {% assign years = site.data.publications | group_by: 'year' | sort: 'name' | reverse %}
+  {% for year in years %}
+  <section class="publication-year" data-publication-year aria-labelledby="year-{{ year.name }}">
+    <h2 id="year-{{ year.name }}">{{ year.name }}</h2>
+    {% for publication in year.items %}
+    <article class="publication" data-publication data-topics="{{ publication.topics | jsonify | escape }}">
+      <h3 class="publication-title"><a href="{{ publication.arxiv }}">{{ publication.title | escape }}</a></h3>
+      <p class="publication-authors">{% for author in publication.authors %}{% if author.self %}<strong>{{ author.name }}</strong>{% else %}{{ author.name }}{% endif %}{% unless forloop.last %}, {% endunless %}{% endfor %}</p>
+      <p class="publication-venue">{{ publication.venue }}</p>
+      <div class="publication-links"><a href="{{ publication.pdf }}">PDF</a><a href="{{ publication.arxiv }}">arXiv</a><a href="{{ publication.anthology }}">ACL Anthology</a></div>
+      <div class="publication-topics">{% for topic in publication.topics %}<span>{{ topic }}</span>{% endfor %}</div>
+      <details class="publication-details"><summary>Summary</summary><p>{{ publication.summary | escape }}</p></details>
+      <details class="publication-details citation-details"><summary>BibTeX</summary><pre><code>{{ publication.bibtex | escape }}</code></pre></details>
+    </article>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</section>

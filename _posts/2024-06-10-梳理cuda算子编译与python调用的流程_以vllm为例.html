@@ -1,0 +1,28 @@
+---
+layout: post
+title: 梳理cuda算子编译与python调用的流程
+date: '2024-06-10T12:22:54.000Z'
+last_modified_at: '2024-08-16T05:39:35.573Z'
+permalink: /2024/06/10/梳理cuda算子编译与python调用的流程_以vllm为例/
+categories:
+- vLLM源码阅读
+tags: []
+description: 跟踪vllm在generation阶段的代码，发现其page_atttention有V1和V2两个版本。以其V2版本为例。
+reading_time: 1
+toc:
+- text: 梳理cuda算子编译与python调用的流程
+  id: 梳理cuda算子编译与python调用的流程
+  level: 1
+search_text: 梳理cuda算子编译与python调用的流程 跟踪vllm在generation阶段的代码，发现其page_atttention有V1和V2两个版本。以其V2版本为例。 下图是他在 vllm/_custom_ops.py 中的定义，调用vllm_ops中的paged_attention_v2。但是这个paged_attention_v2在那里呢。 通过vscode全局搜索 paged_attention_v2 ,发现其是cuda实现的。那么为什么这里在py文件中可以直接调用呢？ 参考 https://blog.csdn.net/u011590738/article/details/135999385文章。弄明白了其原理。 遂做记录
+migrated_from: Hexo
+---
+{% raw %}
+<h1 id="梳理cuda算子编译与python调用的流程">梳理cuda算子编译与python调用的流程</h1><p>跟踪vllm在generation阶段的代码，发现其page_atttention有V1和V2两个版本。以其V2版本为例。</p>
+<p>下图是他在<code>vllm/_custom_ops.py</code>中的定义，调用vllm_ops中的paged_attention_v2。但是这个paged_attention_v2在那里呢。</p>
+<p>通过vscode全局搜索<code>paged_attention_v2</code>,发现其是cuda实现的。那么为什么这里在py文件中可以直接调用呢？</p>
+<p><img alt="image-20240610202659951" decoding="async" loading="lazy" src="/assets/images/posts/202406102026982.png"/></p>
+<p><img alt="image-20240610202420869" decoding="async" loading="lazy" src="/assets/images/posts/202406102024962.png"/></p>
+<p>参考<a href="https://blog.csdn.net/u011590738/article/details/135999385%E6%96%87%E7%AB%A0%E3%80%82%E5%BC%84%E6%98%8E%E7%99%BD%E4%BA%86%E5%85%B6%E5%8E%9F%E7%90%86%E3%80%82" rel="noopener noreferrer" target="_blank">https://blog.csdn.net/u011590738/article/details/135999385文章。弄明白了其原理。</a></p>
+<p>遂做记录</p>
+
+{% endraw %}

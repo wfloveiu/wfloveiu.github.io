@@ -1,0 +1,21 @@
+---
+layout: default
+---
+<article class="page-container post-page">
+  <a class="back-link" href="{{ '/technical-blog/' | relative_url }}">← Tech Blog</a>
+  <header class="post-header">
+    <h1>{{ page.title | escape }}</h1>
+    <div class="post-meta"><time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: '%Y-%m-%d' }}</time>{% for category in page.categories %}<a class="category-label" href="{{ '/categories/' | append: category | append: '/' | relative_url }}">{{ category }}</a>{% endfor %}{% if page.reading_time %}<span>{{ page.reading_time }} 分钟阅读</span>{% endif %}</div>
+    {% if page.last_modified_at %}<p class="updated">更新于 {{ page.last_modified_at | date: '%Y-%m-%d' }}</p>{% endif %}
+  </header>
+  {% if page.toc.size > 1 %}<details class="toc"><summary>文章目录 <span>{{ page.toc.size }}</span></summary><ol>{% for heading in page.toc %}<li class="toc-level-{{ heading.level }}"><a href="#{{ heading.id | escape }}">{{ heading.text | escape }}</a></li>{% endfor %}</ol></details>{% endif %}
+  <div class="post-content" id="article-container">{{ content }}</div>
+  <footer class="post-footer">
+    {% if page.tags.size > 0 %}<p class="post-tags">{% for tag in page.tags %}<a href="{{ '/tags/' | append: tag | append: '/' | relative_url }}"># {{ tag }}</a>{% endfor %}</p>{% endif %}
+    <p class="license">作者：{{ site.author }} · 本文采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可。</p>
+    <nav class="post-pagination" aria-label="相邻文章">
+    {% if page.previous %}<a href="{{ page.previous.url | relative_url }}"><span>← 较早文章</span>{{ page.previous.title }}</a>{% endif %}
+    {% if page.next %}<a href="{{ page.next.url | relative_url }}"><span>较新文章 →</span>{{ page.next.title }}</a>{% endif %}
+    </nav>
+  </footer>
+</article>

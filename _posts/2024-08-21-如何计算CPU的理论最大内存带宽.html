@@ -1,0 +1,96 @@
+---
+layout: post
+title: 如何计算CPU的理论最大内存带宽
+date: '2024-08-21T14:14:51.000Z'
+last_modified_at: '2024-09-03T08:57:49.881Z'
+permalink: /2024/08/21/如何计算CPU的理论最大内存带宽/
+categories: []
+tags: []
+description: 在FastDecode文章中，红框里显示CPU的最大内存带宽，这是怎么计算的呢？
+reading_time: 3
+toc:
+- text: 计算CPU的内存带宽和CPU-GPU的PCIE带宽
+  id: 计算CPU的内存带宽和CPU-GPU的PCIE带宽
+  level: 1
+- text: 计算CPU的最大内存带宽
+  id: 计算CPU的最大内存带宽
+  level: 2
+- text: 查看CPU-GPU之间的PCIE带宽
+  id: 查看CPU-GPU之间的PCIE带宽
+  level: 2
+search_text: '计算CPU的内存带宽和CPU-GPU的PCIE带宽 计算CPU的最大内存带宽 在FastDecode文章中，红框里显示CPU的最大内存带宽，这是怎么计算的呢？ 首先有几个基础知识： 内存核心频率 倍增系数：DDR通过数据预取技术放大速率，每代ddr倍率是固定的，ddr=2, ddr2=4, ddr3=8, ddr4=8, ddr5=16，这里的单位是B 通道数 那么理论最大带宽=内存核心频率×倍增系数×通道数MB/s 以这个Intel Xeon Gold 5218为例。内存核心频率是2667MHz。最大通道数是6，使用的是DDR4，则倍增系数是8。 因此理论最大带宽 = 2667×8×6 = 128016MB/s = 128GB/s 查看CPU-GPU之间的PCIE带宽 https://cloud.tencent.com/developer/article/2371902 运行结果如下 设备编号: 17:00.0 设备类型: 3D controller: NVIDIA Corporation GV100GL [Tesla V100 PCIe 16GB] (rev a1) 设备信息: 10de:1db4 带宽信息: LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x16 (ok) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x8 (downgraded) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x8 (downgraded) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x16 (ok) 设备编号: 65:00.0 设备类型: 3D controller: NVIDIA Corporation GV100GL
+  [Tesla V100 PCIe 16GB] (rev a1) 设备信息: 10de:1db4 带宽信息: LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x16 (ok) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x8 (downgraded) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x8 (downgraded) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x16 (ok) 设备编号: ca:00.0 设备类型: 3D controller: NVIDIA Corporation GV100GL [Tesla V100 PCIe 16GB] (rev a1) 设备信息: 10de:1db4 带宽信息: LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x16 (ok) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x8 (downgraded) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x8 (downgraded) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x16
+  (ok) 设备编号: e3:00.0 设备类型: 3D controller: NVIDIA Corporation GV100GL [Tesla V100 PCIe 16GB] (rev a1) 设备信息: 10de:1db4 带宽信息: LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x16 (ok) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x8 (downgraded) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x8 (downgraded) LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported LnkSta: Speed 8GT/s (ok), Width x16 (ok) 8GT/s对应的是PCIE3.0，与V100显示的规格一致，16通道的话，最终的带宽是16GB/s'
+migrated_from: Hexo
+---
+{% raw %}
+<h1 id="计算CPU的内存带宽和CPU-GPU的PCIE带宽">计算CPU的内存带宽和CPU-GPU的PCIE带宽</h1><h2 id="计算CPU的最大内存带宽">计算CPU的最大内存带宽</h2><p>在FastDecode文章中，红框里显示CPU的最大内存带宽，这是怎么计算的呢？</p>
+<p><img alt="image-20240821220423762" decoding="async" loading="lazy" src="/assets/images/posts/202408212205791.png"/></p>
+<p>首先有几个基础知识：</p>
+<ul>
+<li>内存核心频率</li>
+<li>倍增系数：DDR通过数据预取技术放大速率，每代ddr倍率是固定的，ddr=2, ddr2=4, ddr3=8, ddr4=8, ddr5=16，这里的单位是B</li>
+<li>通道数</li>
+</ul>
+<p>那么理论最大带宽=内存核心频率×倍增系数×通道数MB/s</p>
+<p>以这个Intel Xeon Gold 5218为例。内存核心频率是2667MHz。最大通道数是6，使用的是DDR4，则倍增系数是8。</p>
+<p><img alt="image-20240821221047403" decoding="async" loading="lazy" src="/assets/images/posts/202408212210473.png"/></p>
+<p>因此理论最大带宽 = 2667×8×6 = 128016MB/s = 128GB/s</p>
+<h2 id="查看CPU-GPU之间的PCIE带宽">查看CPU-GPU之间的PCIE带宽</h2><p><a href="https://cloud.tencent.com/developer/article/2371902" rel="noopener noreferrer" target="_blank">https://cloud.tencent.com/developer/article/2371902</a></p>
+<p>运行结果如下</p>
+<pre class="highlight"><code class="language-plaintext">设备编号: 17:00.0
+设备类型: 3D controller: NVIDIA Corporation GV100GL [Tesla V100 PCIe 16GB] (rev a1)
+设备信息: 10de:1db4
+带宽信息:
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x8 (downgraded)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x8 (downgraded)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+
+设备编号: 65:00.0
+设备类型: 3D controller: NVIDIA Corporation GV100GL [Tesla V100 PCIe 16GB] (rev a1)
+设备信息: 10de:1db4
+带宽信息:
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x8 (downgraded)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x8 (downgraded)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+
+设备编号: ca:00.0
+设备类型: 3D controller: NVIDIA Corporation GV100GL [Tesla V100 PCIe 16GB] (rev a1)
+设备信息: 10de:1db4
+带宽信息:
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x8 (downgraded)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x8 (downgraded)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+
+设备编号: e3:00.0
+设备类型: 3D controller: NVIDIA Corporation GV100GL [Tesla V100 PCIe 16GB] (rev a1)
+设备信息: 10de:1db4
+带宽信息:
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x8 (downgraded)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x8 (downgraded)
+                LnkCap: Port #0, Speed 8GT/s, Width x16, ASPM not supported
+                LnkSta: Speed 8GT/s (ok), Width x16 (ok)
+</code></pre>
+<p>8GT/s对应的是PCIE3.0，与V100显示的规格一致，16通道的话，最终的带宽是16GB/s</p>
+<p><img alt="image-20240823171823377" decoding="async" loading="lazy" src="/assets/images/posts/202408232035618.png"/></p>
+
+{% endraw %}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="{{ site.lang | default: 'zh-CN' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title | escape }} | {{ site.title | escape }}</title>
+  <meta name="description" content="{{ page.description | default: site.description | strip_html | escape }}">
+  <link rel="canonical" href="{{ page.url | absolute_url }}">
+  <meta property="og:type" content="{% if page.layout == 'post' %}article{% else %}website{% endif %}">
+  <meta property="og:title" content="{{ page.title | escape }}">
+  <meta property="og:description" content="{{ page.description | default: site.description | strip_html | escape }}">
+  <meta property="og:url" content="{{ page.url | absolute_url }}">
+  <link rel="icon" href="{{ '/assets/images/favicon.png' | relative_url }}">
+  <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ '/feed.xml' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  <script defer src="{{ '/assets/js/main.js' | relative_url }}"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳转到内容</a>
+  <header class="site-header">
+    <nav class="navigation" aria-label="主导航">
+      <a class="site-name" href="{{ '/' | relative_url }}">{{ site.title | escape }}</a>
+      <button class="menu-toggle" aria-expanded="false" aria-controls="nav-links" hidden>菜单 <span aria-hidden="true">☰</span></button>
+      <div class="nav-links" id="nav-links">
+        <a href="{{ '/' | relative_url }}" {% if page.nav == 'home' %}aria-current="page"{% endif %}>Home</a>
+        <a href="{{ '/publications/' | relative_url }}" {% if page.nav == 'publications' %}aria-current="page"{% endif %}>Publications</a>
+        <a href="{{ '/technical-blog/' | relative_url }}" {% if page.nav == 'blog' %}aria-current="page"{% endif %}>Tech Blog</a>
+        <a href="{{ site.github_url }}">GitHub <span aria-hidden="true">↗</span></a>
+      </div>
+    </nav>
+  </header>
+  <main id="main" class="main-content{% if page.nav == 'home' %} home-blank{% endif %}" tabindex="-1">{{ content }}</main>
+  <footer class="site-footer">
+    <p>© {{ site.time | date: '%Y' }} {{ site.author | escape }}. Built with <a href="https://jekyllrb.com/">Jekyll</a> &amp; hosted on <a href="https://pages.github.com/">GitHub Pages</a>.</p>
+    <a class="feed-link" href="{{ '/feed.xml' | relative_url }}">RSS</a>
+  </footer>
+</body>
+</html>

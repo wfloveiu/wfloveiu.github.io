@@ -1,0 +1,172 @@
+---
+layout: post
+title: 使用虚拟机进行基于qemu和gdb的Linux内核调试
+date: '2023-11-20T04:02:34.000Z'
+last_modified_at: '2024-07-24T05:36:59.054Z'
+permalink: /2023/11/20/使用虚拟机进行基于qemu和gdb的Linux内核调试/
+categories:
+- Linux内核
+tags: []
+description: 至少分8个核心（不然编译速度很慢，亲测）
+reading_time: 5
+toc:
+- text: 使用虚拟机进行基于qemu和gdb的Linux内核调试
+  id: 使用虚拟机进行基于qemu和gdb的Linux内核调试
+  level: 1
+- text: 虚拟机配置
+  id: 虚拟机配置
+  level: 2
+- text: 打开SSH
+  id: 打开SSH
+  level: 2
+- text: 内核编译
+  id: 内核编译
+  level: 2
+- text: 准备工作
+  id: 准备工作
+  level: 3
+- text: 编译
+  id: 编译
+  level: 3
+- text: 是否成功
+  id: 是否成功
+  level: 3
+- text: 安装Qemu
+  id: 安装Qemu
+  level: 2
+- text: 安装编译busybox
+  id: 安装编译busybox
+  level: 2
+- text: 构建initramfs根文件系统
+  id: 构建initramfs根文件系统
+  level: 2
+- text: 启动Qemu调试内核
+  id: 启动Qemu调试内核
+  level: 2
+search_text: '使用虚拟机进行基于qemu和gdb的Linux内核调试 虚拟机配置 至少分8个核心（不然编译速度很慢，亲测） 磁盘大小分50G（编译后的内核大小有20多个G！） 打开SSH 虚拟机中安装的是ubuntu22.04版本，默认没有安装和启用SSH服务 更新软件源 sudo apt update && sudo apt upgrade -y 安装SSH(OpenSSH) sudo apt install openssh-server -y 启动SSH服务 sudo systemctl enable --now ssh 检查是否启动成功 sudo systemctl status ssh 内核编译 准备工作 # 安装相关依赖 sudo apt-get install libncurses5-dev libssl-dev bison flex libelf-dev gcc g++ make openssl libc6-dev # 安装gdb，这里使用apt安装（多次尝试的结果） sudo apt-get install gdb gdb --version # gdb版本为12.1 #这里选择清华源，国内速度会快很多 wget https://mirrors.tuna.tsinghua.edu.cn/kernel/v5.x/linux-5.14.tar.gz # 解压 tar -xvf linux-5.14.tar.gz #配置编译选项 make menuconfig 然后会在此文件夹下生成 ./config 文件 进入该文件，并做以下2处修改 vim ./.config 安装dwarves软件包（编译报错得出结论） sudo apt-get install dwarves BTF报错解决 如果仅仅只进行了上边的配置，会报如下错误（我个人是这样） KSYMS   .tmp_vmlinux.kallsyms1.S AS      .tmp_vmlinux.kallsyms1.S LD      .tmp_vmlinux.kallsyms2 KSYMS   .tmp_vmlinux.kallsyms2.S AS      .tmp_vmlinux.kallsyms2.S LD      vmlinux BTFIDS  vmlinux FAILED: load
+  BTF from vmlinux: Invalid argument make: *** [Makefile:1187: vmlinux] Error 255 make: *** Deleting file ''vmlinux'' 查阅资料后，有三种解决方案： https://devkernel.io/posts/pahole-error/ 我使用的是 第二种方法 ，对pahole软件包进行降级 : 查看pahole的版本，是1.25 pahole --version 查看pahole的所有可用安装版本 sudo apt-cache policy pahole 截图如下 我们发现只有两个版本，因此只能降级为 1.22-8 sudo apt install pahole=1.22-8 编译 make -j8 #8个线程并行编译， 然后可能会弹出一个选择（1，2，3），直接选择1即可。等待一段时间，30分钟左右 是否成功 编译完成后，目录下会生成以下,那么就编译成功了 ./vmLinux ./arch/x86/boot/bzImage 其中vmLinux为GDB所需的调试Map文件，bzImage为大内核文件 安装Qemu qemu是一款完全软件模拟(Binary translation)的虚拟化软件，在虚拟化的实现中性能相对较差。但利用它在测试环境中gdb调试Linux内核代码，是熟悉Linux内核代码的一个好方法。 #安装qemu sudo apt-get install qemu 安装编译busybox 安装busybox的目的是：借助BusyBox构建极简initramfs，提供基本的用户态可执行程序。 wget https://busybox.net/downloads/busybox-1.36.1.tar.bz2 # 去官网找最新版 tar -xvf busybox-1.36.1.tar.bz2 cd busybox-1.36.1/ make menuconfig 在编译busybox之前，我们需要对其进行设置，执行 make menuconfig ，如下 这里一定要选择 静态编译 ，编译好的可执行文件 busybox 不依赖动态链接库，可以独立运行，方便构建initramfs。 make -j 8 make && make install # 安装完成后生成的相关文件会在
+  _install 目录下 构建initramfs根文件系统 # 在busybox压缩包的下载目录下,创建的该文件夹，该文件夹下有 # wufang@wufang:~/linux_kernel/kernel_compile$ ls # busybox-1.36.1   busybox-1.36.1.tar.bz2   linux-5.14  linux-5.14.tar.gz mkdir initramfs cd initramfs cp ../busybox-1.29.0/_install/* -rf ./ #将_install文件夹下的所有文件复制到initramfs文件夹下 mkdir dev proc sys sudo cp -a /dev/{null,console, tty ,tty1,tty2,tty3,tty4} dev/ rm -f linuxrc vim init 添加如下代码 #!/bin/busybox sh echo "{==DBG==} INIT SCRIPT" mount -t proc none /proc mount -t sysfs none /sys echo -e "{==DBG==} Boot took $(cut -d'' '' -f1 /proc/uptime) seconds" exec /sbin/init chmod a+x init 修改文件权限 # 完成后，initrams下有如下文件 # bin   dev   init  proc  sbin  sys   usr 打包initramfs find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../initramfs.cpio.gz # 此时在busybox压缩包的下载目录下，有如下文件 # busybox-1.36.1          initramfs               linux-5.14 # busybox-1.36.1.tar.bz2  initramfs.cpio.gz       linux-5.14.tar.gz 启动Qemu调试内核 上述完成之后，就可以启动Qemu来调试内核了,启动代码如下（是一个指令） qemu-system-x86_64 -kernel ./arch/x86/boot/bzImage
+  -initrd ../initramfs.cpio.gz -append "nokaslr console=ttyS0" -s -S -nographic qemu-system-x86_64 ：指定是x86，64位; -kernel ./arch/x86/boot/bzImage ：指定启用的内核镜像； -initrd ../initramfs.cpio.gz ：指定启动的内存文件系统 -append "nokaslr console=ttyS0" ：附加参数，其中 nokaslr 参数 必须添加进来 ，防止内核起始地址随机化，这样会导致 gdb 断点不能命中； -s ：监听在 gdb 1234 端口； -S ：表示启动后就挂起，等待 gdb 连接； -nographic ：不启动图形界面 开启另一个命令行窗口，输入 gdb ，即可开启调试 (gdb) target remote localhost:1234 #连接qemu监听的端口 (gdb) break start_kernel #在start_kernel打断点 (gdb) break rest_init #在res_init打断点 (gdb) c #运行到断点处'
+migrated_from: Hexo
+---
+{% raw %}
+<h1 id="使用虚拟机进行基于qemu和gdb的Linux内核调试">使用虚拟机进行基于qemu和gdb的Linux内核调试</h1><h2 id="虚拟机配置">虚拟机配置</h2><p>至少分8个核心（不然编译速度很慢，亲测）</p>
+<p>磁盘大小分50G（编译后的内核大小有20多个G！）</p>
+<h2 id="打开SSH">打开SSH</h2><p>虚拟机中安装的是ubuntu22.04版本，默认没有安装和启用SSH服务</p>
+<p><strong>更新软件源</strong></p>
+<pre class="highlight"><code class="language-sh">sudo apt update &amp;&amp; sudo apt upgrade -y</code></pre>
+<p><strong>安装SSH(OpenSSH)</strong></p>
+<pre class="highlight"><code class="language-sh">sudo apt install openssh-server -y</code></pre>
+<p><strong>启动SSH服务</strong></p>
+<pre class="highlight"><code class="language-sh">sudo systemctl <span class="built_in">enable</span> --now ssh</code></pre>
+<p><strong>检查是否启动成功</strong></p>
+<pre class="highlight"><code class="language-sh">sudo systemctl status ssh</code></pre>
+<h2 id="内核编译">内核编译</h2><h3 id="准备工作">准备工作</h3><pre class="highlight"><code class="language-sh"><span class="comment"># 安装相关依赖</span>
+sudo apt-get install libncurses5-dev libssl-dev bison flex libelf-dev gcc g++ make openssl libc6-dev
+
+<span class="comment"># 安装gdb，这里使用apt安装（多次尝试的结果）</span>
+sudo apt-get install gdb
+gdb --version <span class="comment"># gdb版本为12.1</span>
+
+<span class="comment">#这里选择清华源，国内速度会快很多</span>
+wget https://mirrors.tuna.tsinghua.edu.cn/kernel/v5.x/linux-5.14.tar.gz
+<span class="comment"># 解压</span>
+tar -xvf linux-5.14.tar.gz
+
+<span class="comment">#配置编译选项</span>
+make menuconfig</code></pre>
+<p>然后会在此文件夹下生成 <strong>./config</strong>文件</p>
+<p><strong>进入该文件，并做以下2处修改</strong></p>
+<pre class="highlight"><code class="language-sh">vim ./.config</code></pre>
+<p><img alt="image-20231117212013850" decoding="async" loading="lazy" src="/assets/images/posts/202311201128412.png"/></p>
+<p><strong>安装dwarves软件包（编译报错得出结论）</strong></p>
+<pre class="highlight"><code class="language-sh">sudo apt-get install dwarves</code></pre>
+<p><strong>BTF报错解决</strong></p>
+<p>如果仅仅只进行了上边的配置，会报如下错误（我个人是这样）</p>
+<pre class="highlight"><code class="language-sh">  KSYMS   .tmp_vmlinux.kallsyms1.S
+  AS      .tmp_vmlinux.kallsyms1.S
+  LD      .tmp_vmlinux.kallsyms2
+  KSYMS   .tmp_vmlinux.kallsyms2.S
+  AS      .tmp_vmlinux.kallsyms2.S
+  LD      vmlinux
+  BTFIDS  vmlinux
+FAILED: load BTF from vmlinux: Invalid argument
+make: *** [Makefile:1187: vmlinux] Error 255
+make: *** Deleting file <span class="string">'vmlinux'</span></code></pre>
+<p>查阅资料后，有三种解决方案：<a href="https://devkernel.io/posts/pahole-error/" rel="noopener noreferrer" target="_blank">https://devkernel.io/posts/pahole-error/</a></p>
+<p>我使用的是<strong>第二种方法</strong>，对pahole软件包进行降级 :</p>
+<p>查看pahole的版本，是1.25</p>
+<pre class="highlight"><code class="language-sh">pahole --version  </code></pre>
+<p>查看pahole的所有可用安装版本</p>
+<pre class="highlight"><code class="language-sh">sudo apt-cache policy pahole</code></pre>
+<p>截图如下</p>
+<p><img alt="1" decoding="async" loading="lazy" src="/assets/images/posts/202311201127209.png"/></p>
+<p>我们发现只有两个版本，因此只能降级为 1.22-8</p>
+<pre class="highlight"><code class="language-sh">sudo apt install pahole=1.22-8</code></pre>
+<h3 id="编译">编译</h3><pre class="highlight"><code class="language-sh">make -j8      <span class="comment">#8个线程并行编译，</span></code></pre>
+<p>然后可能会弹出一个选择（1，2，3），直接选择1即可。等待一段时间，30分钟左右</p>
+<h3 id="是否成功">是否成功</h3><p>编译完成后，目录下会生成以下,那么就编译成功了</p>
+<blockquote>
+<p>./vmLinux</p>
+<p>./arch/x86/boot/bzImage</p>
+<p>其中vmLinux为GDB所需的调试Map文件，bzImage为大内核文件</p>
+</blockquote>
+<h2 id="安装Qemu">安装Qemu</h2><p>qemu是一款完全软件模拟(Binary translation)的虚拟化软件，在虚拟化的实现中性能相对较差。但利用它在测试环境中gdb调试Linux内核代码，是熟悉Linux内核代码的一个好方法。</p>
+<pre class="highlight"><code class="language-sh"><span class="comment">#安装qemu</span>
+sudo apt-get install qemu</code></pre>
+<h2 id="安装编译busybox">安装编译busybox</h2><p>安装busybox的目的是：借助BusyBox构建极简initramfs，提供基本的用户态可执行程序。</p>
+<pre class="highlight"><code class="language-sh">wget https://busybox.net/downloads/busybox-1.36.1.tar.bz2  <span class="comment"># 去官网找最新版</span>
+tar -xvf busybox-1.36.1.tar.bz2
+<span class="built_in">cd</span> busybox-1.36.1/
+make menuconfig</code></pre>
+<p>在编译busybox之前，我们需要对其进行设置，执行<code>make menuconfig</code>，如下</p>
+<p><img alt="image-20231120113536905" decoding="async" loading="lazy" src="/assets/images/posts/202311201135953.png"/></p>
+<p><img alt="image-20231120113608696" decoding="async" loading="lazy" src="/assets/images/posts/202311201136740.png"/></p>
+<p>这里一定要选择<strong>静态编译</strong>，编译好的可执行文件<code>busybox</code>不依赖动态链接库，可以独立运行，方便构建initramfs。</p>
+<pre class="highlight"><code class="language-sh">make -j 8
+make &amp;&amp; make install <span class="comment"># 安装完成后生成的相关文件会在 _install 目录下</span></code></pre>
+<h2 id="构建initramfs根文件系统">构建initramfs根文件系统</h2><pre class="highlight"><code class="language-sh"><span class="comment"># 在busybox压缩包的下载目录下,创建的该文件夹，该文件夹下有</span>
+<span class="comment"># wufang@wufang:~/linux_kernel/kernel_compile$ ls</span>
+<span class="comment"># busybox-1.36.1   busybox-1.36.1.tar.bz2   linux-5.14  linux-5.14.tar.gz</span>
+
+<span class="built_in">mkdir</span> initramfs
+<span class="built_in">cd</span> initramfs
+<span class="built_in">cp</span> ../busybox-1.29.0/_install/* -rf ./ <span class="comment">#将_install文件夹下的所有文件复制到initramfs文件夹下</span>
+<span class="built_in">mkdir</span> dev proc sys
+sudo <span class="built_in">cp</span> -a /dev/{null,console,<span class="built_in">tty</span>,tty1,tty2,tty3,tty4} dev/
+<span class="built_in">rm</span> -f linuxrc
+vim init</code></pre>
+<p>添加如下代码</p>
+<pre class="highlight"><code class="language-sh"><span class="meta">#!/bin/busybox sh</span>
+<span class="built_in">echo</span> <span class="string">"{==DBG==} INIT SCRIPT"</span>
+mount -t proc none /proc
+mount -t sysfs none /sys
+
+<span class="built_in">echo</span> -e <span class="string">"{==DBG==} Boot took <span class="subst">$(cut -d' ' -f1 /proc/uptime)</span> seconds"</span>
+<span class="built_in">exec</span> /sbin/init</code></pre>
+<pre class="highlight"><code class="language-sh"><span class="built_in">chmod</span> a+x init 修改文件权限
+<span class="comment"># 完成后，initrams下有如下文件</span>
+<span class="comment"># bin   dev   init  proc  sbin  sys   usr</span></code></pre>
+<p><strong>打包initramfs</strong></p>
+<pre class="highlight"><code class="language-sh">find . -print0 | cpio --null -ov --format=newc | gzip -9 &gt; ../initramfs.cpio.gz
+<span class="comment"># 此时在busybox压缩包的下载目录下，有如下文件</span>
+<span class="comment"># busybox-1.36.1          initramfs               linux-5.14</span>
+<span class="comment"># busybox-1.36.1.tar.bz2  initramfs.cpio.gz       linux-5.14.tar.gz</span></code></pre>
+<h2 id="启动Qemu调试内核">启动Qemu调试内核</h2><p>上述完成之后，就可以启动Qemu来调试内核了,启动代码如下（是一个指令）</p>
+<pre class="highlight"><code class="language-sh">qemu-system-x86_64 -kernel ./arch/x86/boot/bzImage -initrd ../initramfs.cpio.gz -append <span class="string">"nokaslr console=ttyS0"</span> -s -S -nographic</code></pre>
+<ul>
+<li><code>qemu-system-x86_64</code>：指定是x86，64位;</li>
+<li><code>-kernel ./arch/x86/boot/bzImage</code>：指定启用的内核镜像；</li>
+<li><code>-initrd ../initramfs.cpio.gz</code>：指定启动的内存文件系统</li>
+<li><code>-append "nokaslr console=ttyS0"</code> ：附加参数，其中 <code>nokaslr</code> 参数<strong>必须添加进来</strong>，防止内核起始地址随机化，这样会导致 gdb 断点不能命中；</li>
+<li><code>-s</code> ：监听在 gdb 1234 端口；</li>
+<li><code>-S</code> ：表示启动后就挂起，等待 gdb 连接；</li>
+<li><code>-nographic</code>：不启动图形界面</li>
+</ul>
+<p>开启另一个命令行窗口，输入<strong>gdb</strong>，即可开启调试</p>
+<pre class="highlight"><code class="language-sh">(gdb) target remote localhost:1234  <span class="comment">#连接qemu监听的端口</span>
+(gdb) <span class="built_in">break</span> start_kernel      <span class="comment">#在start_kernel打断点</span>
+(gdb) <span class="built_in">break</span>  rest_init        <span class="comment">#在res_init打断点</span>
+(gdb) c                       <span class="comment">#运行到断点处</span></code></pre>
+
+{% endraw %}

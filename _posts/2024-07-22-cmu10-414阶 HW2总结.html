@@ -1,0 +1,201 @@
+---
+layout: post
+title: cmu10-414 HW2总结
+date: '2024-07-22T14:33:59.000Z'
+last_modified_at: '2024-08-14T12:05:18.049Z'
+permalink: /2024/07/22/cmu10-414阶 HW2总结/
+categories:
+- cmu10-414
+tags: []
+description: __inin__.py 中定义 needle对外暴露的模块、类、函数
+reading_time: 6
+toc:
+- text: cmu10-414知识点总结(HW2)
+  id: cmu10-414知识点总结-HW2
+  level: 1
+- text: 重要代码块
+  id: 重要代码块
+  level: 2
+- text: inin.py
+  id: inin-py
+  level: 3
+- text: optim.py
+  id: optim-py
+  level: 3
+- text: autograd.py
+  id: autograd-py
+  level: 3
+- text: ops->ops_mathematic.py
+  id: ops-ops-mathematic-py
+  level: 3
+- text: ops->ops_logarithmatic.py
+  id: ops-ops-logarithmatic-py
+  level: 3
+- text: init->init_initializers.py
+  id: init-init-initializers-py
+  level: 3
+- text: 归一化(Normalization)与正则化(Regularization)
+  id: 归一化-Normalization-与正则化-Regularization
+  level: 2
+search_text: "cmu10-414知识点总结(HW2) 重要代码块 HW2分支的代码结构如下 inin .py __inin__.py 中定义 needle对外暴露的模块、类、函数 from . import ops from .ops import * from .autograd import Tensor, cpu, all_devices from . import init from .init import ones, zeros, zeros_like, ones_like from . import data from . import nn from . import optim 第一二行含义，可以通过needle.ops.summation或者needle.summation调用summation函数 optim.py 定义了一些待实现的优化器 autograd.py 定义了Op、Value、Tensor核心数据结构 对于TensorOp，它继承了Op，有3个重要函数(属性) def compute ( self, *args: Tuple [NDArray] ): \"\"\"Calculate forward pass of operator. Parameters ---------- input: np.ndarray A list of input arrays to the function Returns ------- output: nd.array Array output of the operation \"\"\" raise NotImplementedError() 输入输出都是array def gradient ( self, out_grad: \"Value\" , node: \"Value\" ) -> Union [ \"Value\" , Tuple [ \"Value\" ]]: \"\"\"Compute partial adjoint for each input value for a given output adjoint. Parameters ---------- out_grad: Value The adjoint wrt to the output value. node:\
+  \ Value The value node of forward evaluation. Returns ------- input_grads: Value or Tuple[Value] A list containing partial gradient adjoints to be propagated to each of the input node. \"\"\" 输入输出实际都是Tensor。计算这个op对input的偏导数 def __call__ ( self, *args ): # print(self) return Tensor.make_from_op(self, args) def make_from_op ( op: Op, inputs: List [ \"Value\" ] ): # print(op) # print(inputs) tensor = Tensor.__new__(Tensor) tensor._init(op, inputs) if not LAZY_MODE: if not tensor.requires_grad: return tensor.detach() tensor.realize_cached_data() return tensor def realize_cached_data ( self ): \"\"\"Run compute to realize the cached data\"\"\" # avoid recomputation if self.cached_data is not None : return self.cached_data # note: data implicitly calls realized cached data # op.compute的输入输出都是NDarray类型 self.cached_data = self.op.compute( *[x.realize_cached_data() for x in self.inputs] ) return self.cached_data __call__ 函数可以将一个对象当成一个函数使用，当使用“summation”计算a某些维度上的和时， 先通过 Summation(axes)(a) 创建一个对象，并传入参数a。此时将对象当作函数使用，调用\
+  \ __call__ 。在 make_from_op 中创建一个新的tensor，并将其op和input设置为Summation和a。通过 realize_cached_data() 中调用op.compute()来计算其 cached_data 对于Value类，关注其属性 class Value : \"\"\"A value in the computational graph.\"\"\" # trace of computational graph op: Optional [Op] inputs: List [ \"Value\" ] # The following fields are cached fields for # dynamic computation cached_data: NDArray requires_grad: bool inputs 是计算节点的输入，最多是2个 cached_data 是这个计算节点将 inputs 通过 op 计算后的结果 requires_grad 是否需要梯度，因为常数值不需要计算梯度 对于Tensor类，新增了 grad: \"Tensor\" 属性(注意梯度也是Tensor类型)，关注其函数 首先是 __init__() ，当使用 Tensor([2,3,4]) 初始化时调用该函数。 make_from_op() 的用法上文说过。 A.data的作用是创建一个和A的 cached_data 一样的Tensor，但是不具有A的op、inputs等计算图中的关系，即独立于A所在的计算图。 @data.setter 的作用是当设置修改data的数据时调用这个函数，直接将 A.cache_data 设置为 value.cache_data 。 即 A.data = A.data + B.data 的流程是： A和B分别调用detach()创建一个与之cached_data一致的独立于计算图的无梯度Tensor 二者相加(Tensor类对一些基本的运算做了重载，后文说明) 因为这里要修改data的值，因此调用setter下的函数，将A的cached_data设置为相加后的Tensor的cached_data 设置这样的一个属性的目的是： 假如我们要计算多轮迭代之后的一个Tensor的梯度。只要最后的结果 grad\
+  \ = ndl.Tensor([1, 1, 1], dtype=”float32”) lr = 0.1 for i in range(5): ​\tw = w + (-lr) * grad 上边写法会在多轮的”+”构建一个计算图，占用很大存储空间，但是我们只要最后的结果。 而用上data属性后，如下的计算方式无需创建额外的Tensor for i in range(5): ​\tw.data = w.data + (-lr) * grad.data @property #将方法转换成属性，通过.data返问 def data ( self ): return self.detach() @data.setter def data ( self, value ): assert isinstance (value, Tensor) assert value.dtype == self.dtype, \"%s %s\" % ( value.dtype, self.dtype, ) self.cached_data = value.realize_cached_data() def detach ( self ): \"\"\"Create a new tensor that shares the data but detaches from the graph.\"\"\" return Tensor.make_const(self.realize_cached_data()) @staticmethod def make_const ( data, requires_grad= False ): tensor = Tensor.__new__(Tensor) tensor._init( None , [], cached_data=data if not isinstance (data, Tensor) else data.realize_cached_data(), requires_grad=requires_grad, ) return tensor 当要进行反向传播时，通过backward函数计算 计算图 中节点梯度。使用方式A.backward()。 在backward中调用 compute_gradient_of_variables() 函数，先通过 find_topo_sort()\
+  \ 使用拓扑排序计算由output_tensor结束的计算图的拓扑排序结果，进行reversed的目的是我们计算梯度的过程是从后往前算的 ops->ops_mathematic.py 实现了一些算子类的前向计算与梯度计算，继承自TensorOp ops->ops_logarithmatic.py init->init_initializers.py 定义了几个权重的初始化类，用于初始化权重 归一化(Normalization)与正则化(Regularization) 归一化是特征缩放的一种形式，是把数据压缩到一个区间内，比如[0,1]。本节有BatchNorm和LayerNorm。 正则化是为了解决过拟合问题。有L2正则化和L1正则化。权重的大小会影响训练的复杂性。因此可以，使大的权重小一点。 如图L2正则化修改优化的目标函数，使在计算梯度前先将权重进行收缩"
+migrated_from: Hexo
+---
+{% raw %}
+<h1 id="cmu10-414知识点总结-HW2">cmu10-414知识点总结(HW2)</h1><h2 id="重要代码块">重要代码块</h2><p>HW2分支的代码结构如下</p>
+<p><img alt="image-20240722155125198" decoding="async" loading="lazy" src="/assets/images/posts/202407221551271.png"/></p>
+<h3 id="inin-py"><strong>inin</strong>.py</h3><p><code>__inin__.py</code>中定义<strong>needle对外暴露的模块、类、函数</strong></p>
+<pre class="highlight"><code class="language-plaintext">from . import ops
+from .ops import *
+from .autograd import Tensor, cpu, all_devices
+
+from . import init
+from .init import ones, zeros, zeros_like, ones_like
+
+from . import data
+from . import nn
+from . import optim</code></pre>
+<p>第一二行含义，可以通过needle.ops.summation或者needle.summation调用summation函数</p>
+<h3 id="optim-py">optim.py</h3><p>定义了一些待实现的优化器</p>
+<h3 id="autograd-py">autograd.py</h3><p>定义了Op、Value、Tensor核心数据结构</p>
+<p>对于TensorOp，它继承了Op，有3个重要函数(属性)</p>
+<pre class="highlight"><code class="language-python"><span class="keyword">def</span> <span class="title function_">compute</span>(<span class="params">self, *args: <span class="type">Tuple</span>[NDArray]</span>):
+        <span class="string">"""Calculate forward pass of operator.</span>
+<span class="string"></span>
+<span class="string">        Parameters</span>
+<span class="string">        ----------</span>
+<span class="string">        input: np.ndarray</span>
+<span class="string">            A list of input arrays to the function</span>
+<span class="string"></span>
+<span class="string">        Returns</span>
+<span class="string">        -------</span>
+<span class="string">        output: nd.array</span>
+<span class="string">            Array output of the operation</span>
+<span class="string"></span>
+<span class="string">        """</span>
+        <span class="keyword">raise</span> NotImplementedError()</code></pre>
+<p>输入输出都是array</p>
+<pre class="highlight"><code class="language-python"><span class="keyword">def</span> <span class="title function_">gradient</span>(<span class="params"></span>
+<span class="params">    self, out_grad: <span class="string">"Value"</span>, node: <span class="string">"Value"</span></span>
+<span class="params"></span>) -&gt; <span class="type">Union</span>[<span class="string">"Value"</span>, <span class="type">Tuple</span>[<span class="string">"Value"</span>]]:
+    <span class="string">"""Compute partial adjoint for each input value for a given output adjoint.</span>
+<span class="string"></span>
+<span class="string">    Parameters</span>
+<span class="string">    ----------</span>
+<span class="string">    out_grad: Value</span>
+<span class="string">        The adjoint wrt to the output value.</span>
+<span class="string"></span>
+<span class="string">    node: Value</span>
+<span class="string">        The value node of forward evaluation.</span>
+<span class="string"></span>
+<span class="string">    Returns</span>
+<span class="string">    -------</span>
+<span class="string">    input_grads: Value or Tuple[Value]</span>
+<span class="string">        A list containing partial gradient adjoints to be propagated to</span>
+<span class="string">        each of the input node.</span>
+<span class="string">    """</span></code></pre>
+<p>输入输出实际都是Tensor。计算这个op对input的偏导数</p>
+<pre class="highlight"><code class="language-python"><span class="keyword">def</span> <span class="title function_">__call__</span>(<span class="params">self, *args</span>):
+    <span class="comment"># print(self)</span>
+    <span class="keyword">return</span> Tensor.make_from_op(self, args)</code></pre>
+<pre class="highlight"><code class="language-python"><span class="keyword">def</span> <span class="title function_">make_from_op</span>(<span class="params">op: Op, inputs: <span class="type">List</span>[<span class="string">"Value"</span>]</span>):
+    <span class="comment"># print(op)</span>
+    <span class="comment"># print(inputs)</span>
+    tensor = Tensor.__new__(Tensor)
+    tensor._init(op, inputs)
+    <span class="keyword">if</span> <span class="keyword">not</span> LAZY_MODE:
+        <span class="keyword">if</span> <span class="keyword">not</span> tensor.requires_grad:
+            <span class="keyword">return</span> tensor.detach()
+        tensor.realize_cached_data()
+    <span class="keyword">return</span> tensor
+
+<span class="keyword">def</span> <span class="title function_">realize_cached_data</span>(<span class="params">self</span>):
+    <span class="string">"""Run compute to realize the cached data"""</span>
+    <span class="comment"># avoid recomputation</span>
+    <span class="keyword">if</span> self.cached_data <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:
+        <span class="keyword">return</span> self.cached_data
+    <span class="comment"># note: data implicitly calls realized cached data</span>
+    <span class="comment"># op.compute的输入输出都是NDarray类型</span>
+    self.cached_data = self.op.compute(
+        *[x.realize_cached_data() <span class="keyword">for</span> x <span class="keyword">in</span> self.inputs]
+    )
+    <span class="keyword">return</span> self.cached_data</code></pre>
+<p><code>__call__</code>函数可以将一个对象当成一个函数使用，当使用“summation”计算a某些维度上的和时，</p>
+<p>先通过<code>Summation(axes)(a)</code>创建一个对象，并传入参数a。此时将对象当作函数使用，调用<code>__call__</code>。在<code>make_from_op</code>中创建一个新的tensor，并将其op和input设置为Summation和a。通过<code>realize_cached_data()</code>中调用op.compute()来计算其<code>cached_data</code></p>
+<p>对于Value类，关注其属性</p>
+<pre class="highlight"><code class="language-python"><span class="keyword">class</span> <span class="title class_">Value</span>:
+    <span class="string">"""A value in the computational graph."""</span>
+
+    <span class="comment"># trace of computational graph</span>
+    op: <span class="type">Optional</span>[Op]
+    inputs: <span class="type">List</span>[<span class="string">"Value"</span>]
+    <span class="comment"># The following fields are cached fields for</span>
+    <span class="comment"># dynamic computation</span>
+    cached_data: NDArray
+    requires_grad: <span class="built_in">bool</span></code></pre>
+<p><code>inputs</code>是计算节点的输入，最多是2个</p>
+<p><code>cached_data</code>是这个计算节点将<code>inputs</code>通过<code>op</code>计算后的结果</p>
+<p><code>requires_grad</code>是否需要梯度，因为常数值不需要计算梯度</p>
+<p>对于Tensor类，新增了<code>grad: "Tensor"</code>属性(注意梯度也是Tensor类型)，关注其函数</p>
+<p>首先是<code>__init__()</code>，当使用<code>Tensor([2,3,4])</code>初始化时调用该函数。<code>make_from_op()</code>的用法上文说过。</p>
+<p>A.data的作用是创建一个和A的<code>cached_data</code>一样的Tensor，但是不具有A的op、inputs等计算图中的关系，即独立于A所在的计算图。<code>@data.setter</code>的作用是当设置修改data的数据时调用这个函数，直接将<code>A.cache_data</code>设置为<code>value.cache_data</code> 。  </p>
+<p>即<code>A.data = A.data + B.data</code>的流程是：</p>
+<ul>
+<li>A和B分别调用detach()创建一个与之cached_data一致的独立于计算图的无梯度Tensor</li>
+<li>二者相加(Tensor类对一些基本的运算做了重载，后文说明)</li>
+<li>因为这里要修改data的值，因此调用setter下的函数，将A的cached_data设置为相加后的Tensor的cached_data</li>
+</ul>
+<p>设置这样的一个属性的目的是：</p>
+<blockquote>
+<p>假如我们要计算多轮迭代之后的一个Tensor的梯度。只要最后的结果</p>
+<p>grad = ndl.Tensor([1, 1, 1], dtype=”float32”)</p>
+<p>lr = 0.1</p>
+<p>for i in range(5):</p>
+<p>​	w = w + (-lr) * grad</p>
+<p>上边写法会在多轮的”+”构建一个计算图，占用很大存储空间，但是我们只要最后的结果。</p>
+<p>而用上data属性后，如下的计算方式无需创建额外的Tensor</p>
+<p>for i in range(5):</p>
+<p>​	w.data = w.data + (-lr) * grad.data</p>
+</blockquote>
+<pre class="highlight"><code class="language-python"><span class="meta">@property </span><span class="comment">#将方法转换成属性，通过.data返问</span>
+<span class="keyword">def</span> <span class="title function_">data</span>(<span class="params">self</span>):
+    <span class="keyword">return</span> self.detach()
+
+<span class="meta">@data.setter</span>
+<span class="keyword">def</span> <span class="title function_">data</span>(<span class="params">self, value</span>):
+    <span class="keyword">assert</span> <span class="built_in">isinstance</span>(value, Tensor)
+    <span class="keyword">assert</span> value.dtype == self.dtype, <span class="string">"%s %s"</span> % (
+        value.dtype,
+        self.dtype,
+    )
+    self.cached_data = value.realize_cached_data()
+ 
+<span class="keyword">def</span> <span class="title function_">detach</span>(<span class="params">self</span>):
+    <span class="string">"""Create a new tensor that shares the data but detaches from the graph."""</span>
+    <span class="keyword">return</span> Tensor.make_const(self.realize_cached_data())
+
+<span class="meta">@staticmethod</span>
+<span class="keyword">def</span> <span class="title function_">make_const</span>(<span class="params">data, requires_grad=<span class="literal">False</span></span>): 
+    tensor = Tensor.__new__(Tensor)
+    tensor._init(
+        <span class="literal">None</span>,
+        [],
+        cached_data=data
+        <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">isinstance</span>(data, Tensor)
+        <span class="keyword">else</span> data.realize_cached_data(),
+        requires_grad=requires_grad,
+    )
+    <span class="keyword">return</span> tensor</code></pre>
+<p>当要进行反向传播时，通过backward函数计算<strong>计算图</strong>中节点梯度。使用方式A.backward()。</p>
+<p>在backward中调用<code>compute_gradient_of_variables()</code>函数，先通过<code>find_topo_sort()</code>使用拓扑排序计算由output_tensor结束的计算图的拓扑排序结果，进行reversed的目的是我们计算梯度的过程是从后往前算的</p>
+<h3 id="ops-ops-mathematic-py">ops-&gt;ops_mathematic.py</h3><p>实现了一些算子类的前向计算与梯度计算，继承自TensorOp</p>
+<h3 id="ops-ops-logarithmatic-py">ops-&gt;ops_logarithmatic.py</h3><h3 id="init-init-initializers-py">init-&gt;init_initializers.py</h3><p>定义了几个权重的初始化类，用于初始化权重</p>
+<h2 id="归一化-Normalization-与正则化-Regularization">归一化(Normalization)与正则化(Regularization)</h2><p>归一化是特征缩放的一种形式，是把数据压缩到一个区间内，比如[0,1]。本节有BatchNorm和LayerNorm。</p>
+<p>正则化是为了解决过拟合问题。有L2正则化和L1正则化。权重的大小会影响训练的复杂性。因此可以，使大的权重小一点。</p>
+<p><img alt="image-20240724170512416" decoding="async" loading="lazy" src="/assets/images/posts/202407241705501.png"/></p>
+<p>如图L2正则化修改优化的目标函数，使在计算梯度前先将权重进行收缩</p>
+
+{% endraw %}
