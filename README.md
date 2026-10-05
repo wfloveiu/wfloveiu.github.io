@@ -1,72 +1,102 @@
-# 吴方 · Jekyll 个人主页
+# 吴方的博客：日常写作入口
 
-由 `wfloveiu.github.io` 的 Hexo 静态站迁移，使用 Jekyll 4.4。页面布局参考 [Jinyan Su 的主页](https://jinyansu1.github.io/)：白底、细边框顶部导航、窄版文章、个人资料侧栏。样式和模板为本项目重新编写。
+网站：[wfloveiu.github.io](https://wfloveiu.github.io/)。你平时只需要编辑 Markdown 文章和图片，不需要修改网页模板。
 
-首页已填写提供的研究兴趣、两个邮箱、教育背景与三段经历，校徽和公司 Logo 保存在本地，经历按最近在前排序。显示名为吴方，头像沿用旧站，可在 `_config.yml`、`assets/images/avatar.jpg` 中修改。教育时间为本科 2020–2024、硕士 2024–2027。旧 Hexo favicon 已移除。
+## 只关注这三个目录
 
-## 本地运行
+| 目录 | 用途 |
+| --- | --- |
+| `_posts/` | 技术文章，显示在 Tech Blog |
+| `_personal_posts/` | 生活随笔，显示在 Personal Blog |
+| `assets/images/posts/` | 文章图片，建议每篇一个子文件夹 |
 
-需要 Ruby 3.3 或更新版本。macOS 系统自带的 Ruby 2.6 不适用于本项目。
+旧的 19 篇文章是从 Hexo 发布页面迁移的 HTML，保留了代码缩进、图片和旧网址。新文章全部使用 `.md` 即可；原有 `.html` 不必照着写。
 
-```sh
-bundle install
-bundle exec jekyll serve --host 127.0.0.1
-```
+## 1. 新建文章
 
-打开 <http://127.0.0.1:4000/>。博客位于 `/technical-blog/`。
-
-```sh
-JEKYLL_ENV=production bundle exec jekyll build --strict_front_matter
-python3 -m pip install -r requirements-migration.txt
-python3 scripts/verify.py
-```
-
-Python 依赖仅用于内容迁移及完整性检查，网站运行只需要 Jekyll。代码样式、搜索、导航没有运行时 CDN 依赖。
-
-## 编辑与写作
-
-- 首页：`index.html`。
-- 论文页：`publications.html`；论文信息：`_data/publications.yml`。导航中的 Archives 已替换为 Publications，`/archives/` 自动跳转到 `/publications/`。
-- 网站名、作者、网址：`_config.yml`。
-- 样式：`assets/css/style.css`。
-- 布局：`_layouts/`；文章列表：`_includes/post-list.html`。
-- 文章：`_posts/`，图片：`assets/images/posts/`。
-- Personal Blog：`personal-blog.html`，地址 `/personal-blog/`。个人文章使用独立的 `_personal_posts/` 集合，默认显示空列表。
-- 博客支持全文搜索、分类筛选；关闭 JavaScript 仍可浏览全部文章与分类页。
-
-创建一篇新的 Markdown 文章：
+在仓库目录运行下面一种命令，英文短名用于文件名，中文标题用于网页展示：
 
 ```sh
-bash scripts/new-post.sh my-new-post
+./blog new tech deepseek-v4-1 "DeepSeek V4.1 阅读笔记"
+./blog new personal weekend "周末随记"
 ```
 
-在生成文件的 front matter 中填入标题、摘要、分类和标签，正文按 Markdown 撰写。时间默认使用上海时区。
+第一种生成 `_posts/当天日期-deepseek-v4-1.md`，第二种生成 `_personal_posts/weekend.md`。命令会打印完整路径，也会准备对应的图片文件夹。相同文件已存在时会退出，不会覆盖。
 
-发布个人文章时，在 `_personal_posts/` 下新建 `my-personal-post.md`，front matter 填写 `title`、`date` 和 `description`，正文使用 Markdown。布局与导航自动使用 Personal Blog，文章也会加入 RSS 和 sitemap。
+生成的文件开头包含文章信息：
 
-## 迁移记录
+```yaml
+---
+layout: post
+title: "DeepSeek V4.1 阅读笔记"
+date: 2026-10-05 12:00:00 +0800
+description: "整理 CED、CSA2 与 SWA Bounded Replay。"
+published: false
+categories: [模型架构]
+tags: [DeepSeek, Attention]
+---
+```
 
-来源仓库只包含生成后的 HTML，没有原始 Markdown。为保留代码缩进、内嵌 HTML、标题锚点和表格，旧文章使用带 YAML front matter 的 `.html` 格式放入 `_posts/`；Jekyll 原生支持该格式。正文由 Liquid `raw` 包裹，避免代码片段被当成模板语法执行。未来新文章可直接用 Markdown。
+标题、摘要和正文按需填写。日期由命令自动生成，示例日期无需照抄。分类和标签可自行增加，也可以保留 `[]`；列表和链接会自动生成，不必再建对应 HTML 页面。
 
-19 篇文章的标题、发布日期、更新日期、原有分类和标签已保留。每篇使用明确的 `permalink`，保留旧站 `/年/月/日/原始标题/` 地址，包含中文、空格及括号。旧分类、标签、年月归档和分页地址也有对应页面。原文章许可为 CC BY-NC-SA 4.0，继续保留。
+在第二个 `---` 下面写 Markdown，正文标题从 `##` 开始。页面会自动展示文章标题。
 
-`migration/manifest.json` 记录来源提交、每篇正文和代码的 SHA-256、原始图片引用及迁移结果。`scripts/verify.py` 会检查 19 篇旧文的内容一致性、代码块、图片引用数、站内链接、目录锚点、canonical、RSS 和 sitemap。若主动修改旧文正文或代码，应同时审核并更新对应迁移基线，避免把有意修改当成迁移丢失。
+## 2. 添加图片
 
-可重新执行导入（会覆盖已迁移文章，先提交自己的编辑）：
+把图片放到 `assets/images/posts/deepseek-v4-1/`，在正文引用：
+
+```markdown
+![架构示意图](/assets/images/posts/deepseek-v4-1/architecture.png)
+```
+
+文章内使用网站根路径 `/assets/...`，不要引用电脑上的 `/Users/...` 或 Typora 临时路径。
+
+## 3. 本地预览
 
 ```sh
-python3 scripts/migrate.py /path/to/legacy-site /path/to/blog-image-repository
+./blog preview
 ```
 
-已知源站问题：`服务器删除驱动、安装nvidia驱动、CUDA Tookit` 中有一张图仅引用 Windows 本地 Typora 路径，公开站点和图床均无该文件。迁移保留了缺图提示和原始引用记录；补齐源图后可替换对应占位。没有生成或猜测缺失图片。
+打开 <http://127.0.0.1:4000/>，保存文章后 Jekyll 会自动重新生成页面，刷新浏览器即可。停止预览按 `Ctrl+C`。端口被占用时可运行 `./blog preview --port 4001`。
 
-## 发布到原 GitHub Pages 地址
+预览包含 `published: false` 的草稿；正式构建只展示已发布文章。草稿标记控制网页展示，公开 GitHub 仓库中的源码仍然可见。
 
-站点地址：<https://wfloveiu.github.io/>。开发分支：`codex/jekyll-rebuild`；正式发布分支：`main`。
+本机已经配置 Ruby 路径，保存在不会提交的 `.bundle/ruby-bin`。换电脑时安装 Ruby 3.3+，运行 `bundle install` 和 `python3 -m pip install -r requirements-migration.txt` 即可；如使用非默认 Ruby，可把其 bin 目录写入 `.bundle/ruby-bin`。
 
-1. 检查本地预览与迁移记录，提交本地修改并将分支推送到 `wfloveiu/wfloveiu.github.io`。
-2. 在 GitHub 建立 PR；PR 的 Actions 会构建及检查，不会发布。
-3. 在仓库 **Settings → Pages → Build and deployment** 中将 Source 设为 **GitHub Actions**。
-4. 合并到 `main` 后，`.github/workflows/pages.yml` 会构建并发布 `_site` 到原地址。
+## 4. 发布
 
-旧静态站保留在 Git 历史中（迁移前提交 `edfa44337cfd6565ced41a142bce6c46e387e1c5`）。此流程采用 [Jekyll 官方的 GitHub Actions 部署方式](https://jekyllrb.com/docs/continuous-integration/github-actions/)，不能继续使用旧的 Hexo 构建流程。
+写完后把该文章的 `published: false` 改成 `published: true`，然后运行：
+
+```sh
+./blog check
+```
+
+检查通过后提交文章和它的图片。下面的路径请替换成命令实际生成的文件路径：
+
+```sh
+git add _posts/2026-10-05-deepseek-v4-1.md assets/images/posts/deepseek-v4-1/
+git diff --cached --stat
+git commit -m "Add DeepSeek V4.1 notes"
+git push origin HEAD:main
+```
+
+个人文章则提交对应的 `_personal_posts/文章短名.md`。没有图片时不必提交图片目录。当前在 `codex/jekyll-rebuild` 开发分支，推送到 `main` 才会触发正式发布。若推送提示远端有新提交，先同步合并，不要强制推送。
+
+在 [GitHub Actions](https://github.com/wfloveiu/wfloveiu.github.io/actions) 查看构建和部署；成功后刷新公网网页。
+
+## 其他目录为什么存在
+
+| 文件或目录 | 用途；日常写作一般不用动 |
+| --- | --- |
+| `index.html` | 首页介绍、教育与工作经历 |
+| `_data/publications.yml` | 论文信息 |
+| `_layouts/`、`_includes/`、`assets/css/`、`assets/js/` | 布局、样式与交互 |
+| `archives/`、`categories/`、`tags/`、`page/` | 旧网址兼容页面 |
+| `img/`、`photos/` | 旧站图片，保留旧引用 |
+| `migration/`、`scripts/migrate.py` | 迁移记录与导入工具 |
+| `_site/`、`preview/`、`vendor/`、`.jekyll-cache/` | 自动生成的页面、预览、依赖与缓存，已忽略提交 |
+| `.github/`、`Gemfile`、`_config.yml` | 自动部署、依赖与站点设置 |
+
+迁移核对结果见 [migration/REPORT.md](migration/REPORT.md)，标识来源见 [migration/LOGO-SOURCES.md](migration/LOGO-SOURCES.md)。旧站提交 `edfa44337cfd6565ced41a142bce6c46e387e1c5` 保留在 Git 历史中。网站布局参考 [Jinyan Su 的主页](https://jinyansu1.github.io/)，由本项目重新实现。
+
+文章规范参考 [Jekyll Posts](https://jekyllrb.com/docs/posts/) 与 [Front Matter](https://jekyllrb.com/docs/front-matter/)。

@@ -33,6 +33,8 @@ defaults:
       categories: []
       tags: []
 exclude:
+  - blog
+  - docs
   - Gemfile
   - Gemfile.lock
   - README.md

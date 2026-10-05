@@ -4,4 +4,8 @@ title: Categories
 nav: blog
 permalink: /categories/
 ---
-<section class="page-container"><a class="back-link" href="{{ '/technical-blog/' | relative_url }}">← Tech Blog</a><div class="page-heading"><h1>Categories</h1></div><ul class="taxonomy-list">{% assign categories = site.categories | sort %}{% for category in categories %}<li><a href="{{ '/categories/' | append: category[0] | append: '/' | relative_url }}">{{ category[0] }}</a><span>{{ category[1].size }} 篇</span></li>{% endfor %}</ul></section>
+<section class="page-container">
+  <a class="back-link" href="{{ '/technical-blog/' | relative_url }}">← Tech Blog</a>
+  <div class="page-heading"><h1>Categories</h1></div>
+  {% include taxonomy.html field='categories' %}
+</section>

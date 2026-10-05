@@ -1,0 +1,10 @@
+{% assign all_posts = site.posts | concat: site.personal_posts | sort: 'date' | reverse %}
+{% assign terms = '' | split: ',' %}
+{% for post in all_posts %}{% assign terms = terms | concat: post[include.field] %}{% endfor %}
+{% assign terms = terms | uniq | sort %}
+{% for term in terms %}
+<section class="archive-year" id="{{ include.field }}-{{ term | slugify: 'raw' | escape }}">
+  <h2>{{ term | escape }}</h2>
+  <ul>{% for post in all_posts %}{% if post[include.field] contains term %}<li><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%m-%d' }}</time><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></li>{% endif %}{% endfor %}</ul>
+</section>
+{% endfor %}

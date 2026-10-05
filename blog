@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+
+usage() {
+  cat <<'EOF'
+新建技术文章：./blog new tech deepseek-v4-1 "DeepSeek V4.1 阅读笔记"
+新建个人文章：./blog new personal weekend "周末随记"
+预览（包含草稿）：./blog preview
+发布前检查：./blog check
+EOF
+}
+
+command_name="${1:-help}"
+if [ "$#" -gt 0 ]; then shift; fi
+case "$command_name" in
+  new) exec bash scripts/new-post.sh "$@" ;;
+  help|--help|-h) usage; exit 0 ;;
+  preview|check) ;;
+  *) usage >&2; exit 1 ;;
+esac
+
+# Optional, machine-local Ruby location; never committed to the repository.
+if [ -f .bundle/ruby-bin ]; then
+  IFS= read -r blog_ruby_bin < .bundle/ruby-bin
+  if [ ! -x "$blog_ruby_bin/ruby" ]; then
+    echo '本机 Ruby 路径已失效，请更新 .bundle/ruby-bin 或使用 PATH 中的 Ruby 3.3+。' >&2
+    exit 1
+  fi
+  export PATH="$blog_ruby_bin:$PATH"
+fi
+if ! command -v ruby >/dev/null || ! ruby -e 'exit(Gem::Version.new(RUBY_VERSION) >= Gem::Version.new("3.3") ? 0 : 1)'; then
+  echo '需要 Ruby 3.3+；请安装后加入 PATH，或将其 bin 目录写入 .bundle/ruby-bin。' >&2
+  exit 1
+fi
+if ! bundle check >/dev/null 2>&1; then
+  echo '缺少依赖，请在同一 Ruby 环境下运行 bundle install。' >&2
+  exit 1
+fi
+case "$command_name" in
+  preview)
+    exec bundle exec jekyll serve --unpublished --host 127.0.0.1 --destination preview "$@"
+    ;;
+  check)
+    JEKYLL_ENV=production bundle exec jekyll build --strict_front_matter
+    python3 scripts/verify.py
+    ;;
+esac
