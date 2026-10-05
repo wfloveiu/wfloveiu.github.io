@@ -9,6 +9,7 @@ from urllib.parse import unquote, urlparse
 from xml.etree import ElementTree
 
 from bs4 import BeautifulSoup
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -18,6 +19,8 @@ def sha(text):
 
 
 def verify(site):
+    config = yaml.safe_load((ROOT / '_config.yml').read_text())
+    site_url = config['url'].rstrip('/') + config.get('baseurl', '').rstrip('/')
     manifest = json.loads((ROOT / 'migration/manifest.json').read_text())
     errors = []
     posts = manifest['posts']
@@ -38,7 +41,7 @@ def verify(site):
             errors.append('Code mismatch: ' + post['title'])
         if len(body.select('img, .missing-image')) != post['image_count']:
             errors.append('Image count mismatch: ' + post['title'])
-        if unquote(soup.select_one('link[rel="canonical"]')['href']) != 'https://wfloveiu.github.io' + post['url']:
+        if unquote(soup.select_one('link[rel="canonical"]')['href']) != site_url + post['url']:
             errors.append('Canonical mismatch: ' + post['title'])
 
     parsed = {}
@@ -63,7 +66,7 @@ def verify(site):
     homepage = BeautifulSoup((site / 'index.html').read_text(), 'html.parser')
     for heading in ['Research Interests', '📫 Contact', 'Education', 'Experience']:
         assert heading in homepage.get_text(), f'Missing homepage section: {heading}'
-    for email in ['fangwu0314@163.com', 'wfiu666666@gmail.com']:
+    for email in ['fangwu0314@163.com']:
         assert homepage.find('a', href='mailto:' + email), f'Missing contact: {email}'
     blog = BeautifulSoup((site / 'technical-blog/index.html').read_text(), 'html.parser')
     assert len(blog.select('[data-post]')) >= 19

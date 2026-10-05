@@ -1,11 +1,12 @@
-title: 吴方
+title: FangWu
 description: 关于深度学习、推理系统与 Linux 的技术笔记。
-url: https://wfloveiu.github.io
+url: https://fangwu0314.github.io
 baseurl: ""
 lang: zh-CN
 timezone: Asia/Shanghai
-author: 吴方
-github_url: https://github.com/wfloveiu
+author: FangWu
+github_username: FangWu0314
+github_url: https://github.com/FangWu0314
 permalink: /:year/:month/:day/:title/
 markdown: kramdown
 highlighter: rouge

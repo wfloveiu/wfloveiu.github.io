@@ -1,6 +1,6 @@
-# 吴方的博客：日常写作入口
+# FangWu 的博客：日常写作入口
 
-网站：[wfloveiu.github.io](https://wfloveiu.github.io/)。你平时只需要编辑 Markdown 文章和图片，不需要修改网页模板。
+网站：[fangwu0314.github.io](https://fangwu0314.github.io/)。你平时只需要编辑 Markdown 文章和图片，不需要修改网页模板。
 
 ## 只关注这三个目录
 
@@ -82,7 +82,7 @@ git push origin HEAD:main
 
 个人文章则提交对应的 `_personal_posts/文章短名.md`。没有图片时不必提交图片目录。当前在 `codex/jekyll-rebuild` 开发分支，推送到 `main` 才会触发正式发布。若推送提示远端有新提交，先同步合并，不要强制推送。
 
-在 [GitHub Actions](https://github.com/wfloveiu/wfloveiu.github.io/actions) 查看构建和部署；成功后刷新公网网页。
+在 [GitHub Actions](https://github.com/FangWu0314/FangWu0314.github.io/actions) 查看构建和部署；成功后刷新公网网页。
 
 ## 其他目录为什么存在
 
