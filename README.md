@@ -1,8 +1,8 @@
-# 酷狗 · Jekyll 个人主页
+# 吴方 · Jekyll 个人主页
 
 由 `wfloveiu.github.io` 的 Hexo 静态站迁移，使用 Jekyll 4.4。页面布局参考 [Jinyan Su 的主页](https://jinyansu1.github.io/)：白底、细边框顶部导航、窄版文章、个人资料侧栏。样式和模板为本项目重新编写。
 
-首页已填写提供的研究兴趣、两个邮箱、教育背景与三段经历，校徽和公司 Logo 保存在本地，经历按最近在前排序；显示名和头像沿用旧站，可在 `_config.yml`、`assets/images/avatar.jpg` 中修改。学历没有补写未经提供的时间。
+首页已填写提供的研究兴趣、两个邮箱、教育背景与三段经历，校徽和公司 Logo 保存在本地，经历按最近在前排序。显示名为吴方，头像沿用旧站，可在 `_config.yml`、`assets/images/avatar.jpg` 中修改。教育时间为本科 2020–2024、硕士 2024–2027。旧 Hexo favicon 已移除。
 
 ## 本地运行
 
@@ -31,6 +31,7 @@ Python 依赖仅用于内容迁移及完整性检查，网站运行只需要 Jek
 - 样式：`assets/css/style.css`。
 - 布局：`_layouts/`；文章列表：`_includes/post-list.html`。
 - 文章：`_posts/`，图片：`assets/images/posts/`。
+- Personal Blog：`personal-blog.html`，地址 `/personal-blog/`。个人文章使用独立的 `_personal_posts/` 集合，默认显示空列表。
 - 博客支持全文搜索、分类筛选；关闭 JavaScript 仍可浏览全部文章与分类页。
 
 创建一篇新的 Markdown 文章：
@@ -40,6 +41,8 @@ bash scripts/new-post.sh my-new-post
 ```
 
 在生成文件的 front matter 中填入标题、摘要、分类和标签，正文按 Markdown 撰写。时间默认使用上海时区。
+
+发布个人文章时，在 `_personal_posts/` 下新建 `my-personal-post.md`，front matter 填写 `title`、`date` 和 `description`，正文使用 Markdown。布局与导航自动使用 Personal Blog，文章也会加入 RSS 和 sitemap。
 
 ## 迁移记录
 

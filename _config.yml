@@ -1,15 +1,19 @@
-title: 酷狗
+title: 吴方
 description: 关于深度学习、推理系统与 Linux 的技术笔记。
 url: https://wfloveiu.github.io
 baseurl: ""
 lang: zh-CN
 timezone: Asia/Shanghai
-author: 酷狗
+author: 吴方
 github_url: https://github.com/wfloveiu
 permalink: /:year/:month/:day/:title/
 markdown: kramdown
 highlighter: rouge
 excerpt_separator: ""
+collections:
+  personal_posts:
+    output: true
+    permalink: /personal-blog/:name/
 kramdown:
   input: GFM
   syntax_highlighter: rouge
@@ -20,6 +24,14 @@ defaults:
     values:
       layout: post
       nav: blog
+  - scope:
+      path: ""
+      type: personal_posts
+    values:
+      layout: post
+      nav: personal
+      categories: []
+      tags: []
 exclude:
   - Gemfile
   - Gemfile.lock

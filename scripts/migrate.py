@@ -43,8 +43,8 @@ def migrate(source, image_repo):
     posts, assets, warnings = [], {}, []
     for folder in ['img', 'photos']:
         if (source / folder).exists():
-            shutil.copytree(source / folder, ROOT / folder, dirs_exist_ok=True)
-    for name in ['avatar.jpg', 'favicon.png']:
+            shutil.copytree(source / folder, ROOT / folder, dirs_exist_ok=True, ignore=shutil.ignore_patterns('favicon.png'))
+    for name in ['avatar.jpg']:
         shutil.copy2(source / 'img' / name, ROOT / 'assets/images' / name)
 
     for file in sorted(source.glob('20*/*/*/*/index.html')):

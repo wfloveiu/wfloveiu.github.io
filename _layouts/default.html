@@ -10,7 +10,7 @@
   <meta property="og:title" content="{{ page.title | escape }}">
   <meta property="og:description" content="{{ page.description | default: site.description | strip_html | escape }}">
   <meta property="og:url" content="{{ page.url | absolute_url }}">
-  <link rel="icon" href="{{ '/assets/images/favicon.png' | relative_url }}">
+  <link rel="icon" href="data:,">
   <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ '/feed.xml' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
   <script defer src="{{ '/assets/js/main.js' | relative_url }}"></script>
@@ -25,6 +25,7 @@
         <a href="{{ '/' | relative_url }}" {% if page.nav == 'home' %}aria-current="page"{% endif %}>Home</a>
         <a href="{{ '/publications/' | relative_url }}" {% if page.nav == 'publications' %}aria-current="page"{% endif %}>Publications</a>
         <a href="{{ '/technical-blog/' | relative_url }}" {% if page.nav == 'blog' %}aria-current="page"{% endif %}>Tech Blog</a>
+        <a href="{{ '/personal-blog/' | relative_url }}" {% if page.nav == 'personal' %}aria-current="page"{% endif %}>Personal Blog</a>
         <a href="{{ site.github_url }}">GitHub <span aria-hidden="true">↗</span></a>
       </div>
     </nav>

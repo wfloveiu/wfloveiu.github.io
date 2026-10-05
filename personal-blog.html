@@ -1,0 +1,17 @@
+---
+layout: default
+title: Personal Blog
+nav: personal
+permalink: /personal-blog/
+description: 记录生活与思考。
+---
+{% assign personal_posts = site.personal_posts | sort: 'date' | reverse %}
+<section class="page-container blog-page">
+  <div class="page-heading"><h1>Personal Blog</h1><span class="total-count">{{ personal_posts.size }} 篇文章</span></div>
+  <p class="page-intro">记录生活与思考。</p>
+  {% if personal_posts.size > 0 %}
+    {% include post-list.html posts=personal_posts %}
+  {% else %}
+    <div class="empty-state"><p>暂时还没有文章。</p></div>
+  {% endif %}
+</section>
