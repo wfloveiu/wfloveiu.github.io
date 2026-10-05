@@ -13,6 +13,12 @@
   <link rel="icon" href="data:,">
   <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ '/feed.xml' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  {% if page.math %}
+  <link rel="stylesheet" href="{{ '/assets/lib/katex/katex.min.css' | relative_url }}">
+  <script defer src="{{ '/assets/lib/katex/katex.min.js' | relative_url }}"></script>
+  <script defer src="{{ '/assets/lib/katex/contrib/auto-render.min.js' | relative_url }}"></script>
+  <script defer src="{{ '/assets/js/math.js' | relative_url }}"></script>
+  {% endif %}
   <script defer src="{{ '/assets/js/main.js' | relative_url }}"></script>
 </head>
 <body>
