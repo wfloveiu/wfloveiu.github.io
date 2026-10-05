@@ -39,7 +39,7 @@ if ! bundle check >/dev/null 2>&1; then
 fi
 case "$command_name" in
   preview)
-    exec bundle exec jekyll serve --unpublished --host 127.0.0.1 --destination preview "$@"
+    exec bundle exec jekyll serve --unpublished --host 127.0.0.1 --destination .build/preview "$@"
     ;;
   check)
     JEKYLL_ENV=production bundle exec jekyll build --strict_front_matter

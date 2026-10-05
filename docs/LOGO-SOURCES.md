@@ -1,6 +1,6 @@
 # 首页标识来源
 
-所有标识用于说明教育和工作经历，文件保存在 `assets/images/logos/`，页面不依赖外链图片。
+所有标识用于说明教育和工作经历，文件保存在 `site/assets/images/logos/`，页面不依赖外链图片。
 
 - 厦门大学：官方 [学校标识](https://www.xmu.edu.cn/sdgl/xxbs.htm) 页面中的校徽 JPEG。
 - 哈尔滨工程大学：[校徽资源](https://www.urongda.com/logos/4123010217) 提供的 PNG，样式依据 [学校文化标识](https://dwxcb.hrbeu.edu.cn/xxwhbsywhcp/main.psp) 核对；该官方图片服务器在下载时超时。

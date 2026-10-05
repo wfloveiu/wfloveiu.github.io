@@ -21,7 +21,7 @@ def sha(text):
 def verify(site):
     config = yaml.safe_load((ROOT / '_config.yml').read_text())
     site_url = config['url'].rstrip('/') + config.get('baseurl', '').rstrip('/')
-    manifest = json.loads((ROOT / 'migration/manifest.json').read_text())
+    manifest = json.loads((ROOT / 'docs/migration/manifest.json').read_text())
     errors = []
     posts = manifest['posts']
     assert len(posts) == 19, 'Expected the 19 published legacy posts.'
@@ -44,10 +44,8 @@ def verify(site):
         if unquote(soup.select_one('link[rel="canonical"]')['href']) != site_url + post['url']:
             errors.append('Canonical mismatch: ' + post['title'])
 
-    parsed = {}
     for file in site.rglob('*.html'):
         soup = BeautifulSoup(file.read_text(), 'html.parser')
-        parsed[file] = soup
         for node in soup.select('[src], a[href], link[href]'):
             raw = node.get('src') or node.get('href')
             url = urlparse(raw)
@@ -72,12 +70,13 @@ def verify(site):
     assert len(blog.select('[data-post]')) >= 19
     assert 'example.com' not in (site / 'index.html').read_text()
     if errors: raise SystemExit('\n'.join(errors))
-    print(f'PASS: {len(posts)} posts; {sum(p["code_blocks"] for p in posts)} exact code blocks; {sum(p["image_count"] for p in posts)} image references; all internal links and article headings; feed/sitemap XML; homepage sections.')
-    print('Source exceptions: ' + str(len(manifest['warnings'])) + ' (see migration/manifest.json).')
+    print(f'PASS: {len(blog.select("[data-post]"))} technical posts; {len(posts)} preserved legacy articles; {sum(p["code_blocks"] for p in posts)} exact legacy code blocks; all internal resources and article headings; feed/sitemap XML; homepage sections.')
+    print('Legacy source exceptions: ' + str(len(manifest['warnings'])) + ' (see docs/migration/manifest.json).')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--site', type=Path, default=ROOT / '_site')
+    config = yaml.safe_load((ROOT / '_config.yml').read_text())
+    parser.add_argument('--site', type=Path, default=ROOT / config['destination'])
     args = parser.parse_args()
     verify(args.site.resolve())

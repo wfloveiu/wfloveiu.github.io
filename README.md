@@ -1,104 +1,120 @@
-# FangWu 的博客：日常写作入口
+# FangWu 的博客
 
-网站：[fangwu0314.github.io](https://fangwu0314.github.io/)。你平时只需要编辑 Markdown 文章和图片，不需要修改网页模板。
+网站：[fangwu0314.github.io](https://fangwu0314.github.io/) · [部署状态](https://github.com/FangWu0314/FangWu0314.github.io/actions)
 
-## 只关注这三个目录
+## 日常只需要这三个目录
 
 | 目录 | 用途 |
 | --- | --- |
-| `_posts/` | 技术文章，显示在 Tech Blog |
-| `_personal_posts/` | 生活随笔，显示在 Personal Blog |
-| `assets/images/posts/` | 文章图片，建议每篇一个子文件夹 |
+| `site/_posts/` | 技术文章，显示在 Tech Blog |
+| `site/_personal_posts/` | 生活随笔，显示在 Personal Blog |
+| `site/assets/images/posts/` | 文章配图，每篇新文章一个子文件夹 |
 
-旧的 19 篇文章是从 Hexo 发布页面迁移的 HTML，保留了代码缩进、图片和旧网址。新文章全部使用 `.md` 即可；原有 `.html` 不必照着写。
+本机项目位置：`~/codes/FangWu0314.github.io`。进入此目录后使用下面的命令。
 
-## 1. 新建文章
-
-在仓库目录运行下面一种命令，英文短名用于文件名，中文标题用于网页展示：
+## 写一篇文章
 
 ```sh
 ./blog new tech deepseek-v4-1 "DeepSeek V4.1 阅读笔记"
 ./blog new personal weekend "周末随记"
 ```
 
-第一种生成 `_posts/当天日期-deepseek-v4-1.md`，第二种生成 `_personal_posts/weekend.md`。命令会打印完整路径，也会准备对应的图片文件夹。相同文件已存在时会退出，不会覆盖。
+任选一种。脚本会生成 Markdown 草稿和对应图片目录，并打印文章路径。文件存在时不会覆盖。
 
-生成的文件开头包含文章信息：
+- 技术文章文件名：`site/_posts/日期-英文短名.md`。
+- 个人文章文件名：`site/_personal_posts/英文短名.md`。
+- 旧的 19 篇 `.html` 文章保留原始内容；新文章使用 `.md` 即可。
+
+文件开头是文章信息，例如：
 
 ```yaml
 ---
 layout: post
 title: "DeepSeek V4.1 阅读笔记"
-date: 2026-10-05 12:00:00 +0800
-description: "整理 CED、CSA2 与 SWA Bounded Replay。"
+date: 2026-10-06 12:00:00 +0800
+description: "整理 CED、CSA2 与 SWA 重放。"
 published: false
+math: true
 categories: [模型架构]
 tags: [DeepSeek, Attention]
 ---
+
+## 开始
+
+正文写在这里。
 ```
 
-标题、摘要和正文按需填写。日期由命令自动生成，示例日期无需照抄。分类和标签可自行增加，也可以保留 `[]`；列表和链接会自动生成，不必再建对应 HTML 页面。
+日期由脚本自动生成。分类、标签可以自由填写或设为 `[]`，页面会自动更新。需要公式时添加 `math: true`；行内使用 `$N$`，独立公式用单独成行的 `$$` 包围，公式块前后各空一行。公式脚本与字体随网站发布。
 
-在第二个 `---` 下面写 Markdown，正文标题从 `##` 开始。页面会自动展示文章标题。
-
-文章需要公式时，在开头的信息区加入 `math: true`。行内公式使用 `$N$`，独立公式使用单独成行的 `$$` 包围，公式块前后各空一行。KaTeX 的脚本与字体随网站一起发布，无需引用外部公式图片。
-
-## 2. 添加图片
-
-把图片放到 `assets/images/posts/deepseek-v4-1/`，在正文引用：
+将图片放到 `site/assets/images/posts/文章短名/`，正文使用网站路径：
 
 ```markdown
 ![架构示意图](/assets/images/posts/deepseek-v4-1/architecture.png)
 ```
 
-文章内使用网站根路径 `/assets/...`，不要引用电脑上的 `/Users/...` 或 Typora 临时路径。
+网址中不包含 `site/`，不要引用电脑上的 `/Users/...` 或 Typora 临时文件。
 
-## 3. 本地预览
+## 预览与发布
 
 ```sh
 ./blog preview
 ```
 
-打开 <http://127.0.0.1:4000/>，保存文章后 Jekyll 会自动重新生成页面，刷新浏览器即可。停止预览按 `Ctrl+C`。端口被占用时可运行 `./blog preview --port 4001`。
+打开 [本地预览](http://127.0.0.1:4000/)，保存文章后刷新即可。预览包含草稿；端口占用时使用 `./blog preview --port 4001`，停止按 `Ctrl+C`。修改 `_config.yml` 后需要重新启动预览。
 
-预览包含 `published: false` 的草稿；正式构建只展示已发布文章。草稿标记控制网页展示，公开 GitHub 仓库中的源码仍然可见。
-
-本机已经配置 Ruby 路径，保存在不会提交的 `.bundle/ruby-bin`。换电脑时安装 Ruby 3.3+，运行 `bundle install` 和 `python3 -m pip install -r requirements-migration.txt` 即可；如使用非默认 Ruby，可把其 bin 目录写入 `.bundle/ruby-bin`。
-
-## 4. 发布
-
-写完后把该文章的 `published: false` 改成 `published: true`，然后运行：
+写完将文章的 `published: false` 改成 `published: true`，然后：
 
 ```sh
 ./blog check
-```
-
-检查通过后提交文章和它的图片。下面的路径请替换成命令实际生成的文件路径：
-
-```sh
-git add _posts/2026-10-05-deepseek-v4-1.md assets/images/posts/deepseek-v4-1/
+# 以下路径换成实际文章和图片目录；没有图片时省略图片目录。
+git add site/_posts/2026-10-06-deepseek-v4-1.md site/assets/images/posts/deepseek-v4-1/
 git diff --cached --stat
 git commit -m "Add DeepSeek V4.1 notes"
 git push origin HEAD:main
 ```
 
-个人文章则提交对应的 `_personal_posts/文章短名.md`。没有图片时不必提交图片目录。当前在 `codex/jekyll-rebuild` 开发分支，推送到 `main` 才会触发正式发布。若推送提示远端有新提交，先同步合并，不要强制推送。
+个人文章提交 `site/_personal_posts/` 中的对应文件。推送到 `main` 会自动部署；在 [GitHub Actions](https://github.com/FangWu0314/FangWu0314.github.io/actions) 查看结果。远端有新提交时先同步，不要强制推送。草稿标记仅控制网站展示，公开仓库中的草稿源码仍可见。
 
-在 [GitHub Actions](https://github.com/FangWu0314/FangWu0314.github.io/actions) 查看构建和部署；成功后刷新公网网页。
+## 目录结构
 
-## 其他目录为什么存在
+```text
+FangWu0314.github.io/
+├── site/                  网站源码，只有这里的内容参与发布
+│   ├── _posts/            技术文章
+│   ├── _personal_posts/   个人文章
+│   ├── assets/            图片、样式、脚本、公式库
+│   ├── pages/             博客列表、论文、分类、RSS 等页面
+│   │   └── legacy/        旧网址兼容页面，日常不用修改
+│   ├── _data/             论文数据
+│   ├── _layouts/          页面布局
+│   ├── _includes/         共用组件
+│   └── index.html         首页资料
+├── scripts/               新建文章与构建检查工具
+├── docs/                  图片来源、历史迁移核对记录
+├── _config.yml            网站配置与构建目录
+├── blog                   常用命令入口
+├── Gemfile / Gemfile.lock Ruby 依赖与版本锁定
+├── requirements.txt       检查工具的 Python 依赖
+├── .github/               GitHub Pages 自动部署
+├── .bundle/               本机运行环境和依赖，不提交
+└── .build/                构建和预览产物，不提交
+```
 
-| 文件或目录 | 用途；日常写作一般不用动 |
-| --- | --- |
-| `index.html` | 首页介绍、教育与工作经历 |
-| `_data/publications.yml` | 论文信息 |
-| `_layouts/`、`_includes/`、`assets/css/`、`assets/js/` | 布局、样式与交互 |
-| `archives/`、`categories/`、`tags/`、`page/` | 旧网址兼容页面 |
-| `img/`、`photos/` | 旧站图片，保留旧引用 |
-| `migration/`、`scripts/migrate.py` | 迁移记录与导入工具 |
-| `_site/`、`preview/`、`vendor/`、`.jekyll-cache/` | 自动生成的页面、预览、依赖与缓存，已忽略提交 |
-| `.github/`、`Gemfile`、`_config.yml` | 自动部署、依赖与站点设置 |
+首页在 `site/index.html` 修改，论文在 `site/_data/publications.yml` 修改。旧归档、分类和标签网址仍可访问。文章图片均有引用；`site/assets/lib/katex/` 是公式渲染库和字体，保留其许可证。
 
-迁移核对结果见 [migration/REPORT.md](migration/REPORT.md)，标识来源见 [migration/LOGO-SOURCES.md](migration/LOGO-SOURCES.md)。旧站提交 `edfa44337cfd6565ced41a142bce6c46e387e1c5` 保留在 Git 历史中。网站布局参考 [Jinyan Su 的主页](https://jinyansu1.github.io/)，由本项目重新实现。
+已删除不再引用的旧主题图片、重复头像及一次性导入脚本。需要追溯旧文件时可使用 Git 历史；正文校验记录保存在 [docs/migration](docs/migration/)，标识来源见 [docs/LOGO-SOURCES.md](docs/LOGO-SOURCES.md)。
 
-文章规范参考 [Jekyll Posts](https://jekyllrb.com/docs/posts/) 与 [Front Matter](https://jekyllrb.com/docs/front-matter/)。
+## 换电脑运行
+
+安装 Ruby 3.3+ 和 Python 3，进入项目根目录运行：
+
+```sh
+bundle config set --local path .bundle/gems
+bundle install
+python3 -m pip install -r requirements.txt
+./blog preview
+```
+
+当前电脑的 Ruby 路径记录在 `.bundle/ruby-bin`，相对路径以项目根目录为基准；项目移动后仍可使用。`.bundle/` 中的本机运行环境不上传 GitHub，GitHub Actions 使用自己的 Ruby 和 Python。
+
+技术参考：[Jekyll 文章规范](https://jekyllrb.com/docs/posts/) · [Front Matter](https://jekyllrb.com/docs/front-matter/) · [KaTeX 公式渲染](https://katex.org/docs/autorender)。网站布局参考 [Jinyan Su 的主页](https://jinyansu1.github.io/)。

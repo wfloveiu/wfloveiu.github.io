@@ -1,4 +1,7 @@
 title: FangWu
+source: site
+destination: .build/production
+disable_disk_cache: true
 description: 关于深度学习、推理系统与 Linux 的技术笔记。
 url: https://fangwu0314.github.io
 baseurl: ""
@@ -33,16 +36,3 @@ defaults:
       nav: personal
       categories: []
       tags: []
-exclude:
-  - blog
-  - docs
-  - Gemfile
-  - Gemfile.lock
-  - README.md
-  - migration
-  - scripts
-  - vendor
-  - .bundle
-  - requirements-migration.txt
-  - preview
-  - LICENSE

@@ -26,14 +26,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install -r requirements-migration.txt
+      - run: pip install -r requirements.txt
       - run: bundle exec jekyll build --strict_front_matter --trace
         env:
           JEKYLL_ENV: production
       - run: python3 scripts/verify.py
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: .build/production
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
